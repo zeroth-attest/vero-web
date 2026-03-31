@@ -4,6 +4,14 @@ const { getRandomWords } = require('./wordlist');
 const store = require('./session-store');
 const oauth = require('./oauth');
 
+// Parse URL-encoded bodies (needed for Apple's form_post callback)
+router.use(express.urlencoded({ extended: true }));
+
+// GET /api/simple/providers — Return available provider metadata
+router.get('/providers', (req, res) => {
+  res.json(oauth.PROVIDER_META);
+});
+
 // POST /api/simple/session — Verifier creates a session
 router.post('/session', (req, res) => {
   const { presenterHandle, provider } = req.body;
@@ -12,8 +20,8 @@ router.post('/session', (req, res) => {
     return res.status(400).json({ error: 'presenterHandle and provider are required' });
   }
 
-  if (!['google', 'linkedin'].includes(provider)) {
-    return res.status(400).json({ error: 'provider must be "google" or "linkedin"' });
+  if (!oauth.VALID_PROVIDERS.includes(provider)) {
+    return res.status(400).json({ error: `provider must be one of: ${oauth.VALID_PROVIDERS.join(', ')}` });
   }
 
   const session = store.createSession({ presenterHandle, provider });
@@ -131,7 +139,7 @@ router.get('/auth/:provider/start', (req, res) => {
     return res.status(400).json({ error: 'session query parameter is required' });
   }
 
-  if (!['google', 'linkedin'].includes(provider)) {
+  if (!oauth.VALID_PROVIDERS.includes(provider)) {
     return res.status(400).json({ error: 'Unknown provider' });
   }
 
@@ -144,10 +152,13 @@ router.get('/auth/:provider/start', (req, res) => {
   res.redirect(authUrl);
 });
 
-// GET /api/simple/auth/:provider/callback — OAuth callback
-router.get('/auth/:provider/callback', async (req, res) => {
+// OAuth callback handler (shared logic for GET and POST)
+async function handleOAuthCallback(req, res) {
   const { provider } = req.params;
-  const { code, state: stateParam } = req.query;
+
+  // Apple uses form_post (POST body), others use query params (GET)
+  const params = { ...req.query, ...req.body };
+  const { code, state: stateParam, user: appleUser } = params;
 
   if (!code || !stateParam) {
     return res.status(400).send('Missing code or state parameter');
@@ -164,27 +175,31 @@ router.get('/auth/:provider/callback', async (req, res) => {
   }
 
   try {
-    const profile = await oauth.exchangeCodeForProfile(provider, code);
+    const extras = {};
+    if (provider === 'apple' && appleUser) {
+      extras.user = appleUser;
+    }
+
+    const profile = await oauth.exchangeCodeForProfile(provider, code, extras);
 
     // Match the presenter's identity to the session
-    // For Google: match by email
-    // For LinkedIn: match by email or sub
+    // For all providers: match by email (primary strategy)
+    // For GitHub: also match by username
     let matched = false;
-    if (provider === 'google') {
-      matched = profile.email &&
-        profile.email.toLowerCase() === session.presenterHandle.toLowerCase();
-    } else if (provider === 'linkedin') {
-      // LinkedIn handle could be email or profile URL slug
-      matched = (profile.email &&
-        profile.email.toLowerCase() === session.presenterHandle.toLowerCase()) ||
-        profile.sub === session.presenterHandle;
+    const handle = session.presenterHandle.toLowerCase();
+
+    if (profile.email && profile.email.toLowerCase() === handle) {
+      matched = true;
+    } else if (provider === 'github' && profile.username && profile.username.toLowerCase() === handle) {
+      matched = true;
+    } else if (profile.sub && profile.sub.toLowerCase() === handle) {
+      matched = true;
     }
 
     if (!matched) {
       // Still allow the match for demo purposes — the identity was authenticated,
       // just not the expected one. In production you'd reject this.
-      // For now, we'll match anyway and show who authenticated.
-      console.log(`Identity mismatch: expected ${session.presenterHandle}, got ${profile.email || profile.sub}`);
+      console.log(`Identity mismatch: expected ${session.presenterHandle}, got ${profile.email || profile.username || profile.sub}`);
     }
 
     store.matchPresenter(session.id, profile);
@@ -195,6 +210,12 @@ router.get('/auth/:provider/callback', async (req, res) => {
     console.error('OAuth callback error:', err);
     res.redirect('/simple/presenter.html?error=auth_failed');
   }
-});
+}
+
+// GET callback (Google, LinkedIn, GitHub, Microsoft, Facebook)
+router.get('/auth/:provider/callback', handleOAuthCallback);
+
+// POST callback (Apple form_post)
+router.post('/auth/:provider/callback', handleOAuthCallback);
 
 module.exports = router;

@@ -129,6 +129,40 @@ body {
   background: #006097;
 }
 
+.btn-github {
+  background: #24292e;
+}
+
+.btn-github:hover {
+  background: #1b1f23;
+}
+
+.btn-microsoft {
+  background: #2f2f2f;
+  border: 1px solid #555;
+}
+
+.btn-microsoft:hover {
+  background: #404040;
+}
+
+.btn-facebook {
+  background: #1877F2;
+}
+
+.btn-facebook:hover {
+  background: #1466d2;
+}
+
+.btn-apple {
+  background: #000;
+  border: 1px solid #555;
+}
+
+.btn-apple:hover {
+  background: #1a1a1a;
+}
+
 .btn-outline {
   background: transparent;
   border: 1px solid var(--card-border);
@@ -235,18 +269,23 @@ body {
   color: #555;
 }
 
-/* Provider selector */
-.provider-tabs {
-  display: flex;
+/* Provider grid (6 providers in a 3x2 grid) */
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 16px;
 }
 
 .provider-tab {
-  flex: 1;
-  padding: 10px;
-  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  font-size: 12px;
   font-family: inherit;
+  font-weight: 500;
   background: #222;
   border: 1px solid var(--card-border);
   border-radius: 8px;
@@ -256,10 +295,39 @@ body {
   text-align: center;
 }
 
+.provider-tab:hover {
+  border-color: #555;
+  color: var(--text-color);
+}
+
 .provider-tab.active {
   border-color: var(--primary-color);
   color: var(--primary-color);
   background: rgba(51, 153, 255, 0.08);
+}
+
+.provider-tab-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Provider logo list (landing page) */
+.provider-logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.provider-logo-item {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #222;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: var(--text-muted);
 }
 
 /* Word grid */
