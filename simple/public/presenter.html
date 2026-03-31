@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vero Simple Trust - Verify Your Identity</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="/assets/zeroth-0-favicon.png" type="image/png">
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <a href="index.html"><img src="/assets/vero-text.svg" alt="Vero"></a>
+      <div class="subtitle">Simple Trust</div>
+    </div>
+
+    <!-- Screen 1: Find session -->
+    <div id="screen-find" class="screen active">
+      <div class="card">
+        <h2>Verify your identity</h2>
+        <p>Someone asked you to prove who you are. Enter the email or handle they would have used to start the session.</p>
+
+        <div class="provider-tabs">
+          <button class="provider-tab active" data-provider="google" id="tab-google">Google</button>
+          <button class="provider-tab" data-provider="linkedin" id="tab-linkedin">LinkedIn</button>
+        </div>
+
+        <div class="form-group">
+          <label id="handle-label">Your Gmail address</label>
+          <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
+        </div>
+
+        <button class="btn btn-primary" id="btn-find-session">Find My Session</button>
+      </div>
+
+      <div class="callout">
+        No account will be created. We only verify that you control this identity, right now, in this session.
+      </div>
+    </div>
+
+    <!-- Screen 2: Authenticate -->
+    <div id="screen-auth" class="screen">
+      <div class="card">
+        <h2>Sign in to verify</h2>
+        <p>A verification session is waiting for you. Sign in to prove you control this identity.</p>
+
+        <a class="btn btn-google" href="#" id="btn-google" style="display:none;">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Sign in with Google
+        </a>
+        <a class="btn btn-linkedin" href="#" id="btn-linkedin" style="display:none;">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          Sign in with LinkedIn
+        </a>
+      </div>
+    </div>
+
+    <!-- Screen 2: Words displayed -->
+    <div id="screen-words" class="screen">
+      <div class="card">
+        <h2>Read these words aloud</h2>
+        <p>The person verifying you will ask you to read these words. They appear on their screen too.</p>
+
+        <div class="words-display" id="presenter-words"></div>
+
+        <div class="callout">
+          <strong>When asked, read these 5 words aloud.</strong> If they match what the other person sees, your identity is confirmed.
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Trust confirmed -->
+    <div id="screen-confirmed" class="screen">
+      <div class="card success-card">
+        <div class="success-icon">&#10003;</div>
+        <h2>You're Verified</h2>
+        <p>Your identity has been confirmed in this session.</p>
+
+        <div class="upsell">
+          <p>Want to make future verifications instant? Join Vero and your contacts will always know it's really you.</p>
+          <button class="btn btn-primary">Join Vero</button>
+          <button class="btn btn-outline" onclick="window.location.href='index.html'">Maybe Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen: Error -->
+    <div id="screen-error" class="screen">
+      <div class="card">
+        <div class="error-msg" id="error-message">Something went wrong.</div>
+        <button class="btn btn-primary" onclick="window.location.href='presenter.html'">Try Again</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="/">Powered by Vero &middot; Zeroth Technology</a>
+    </div>
+  </div>
+
+  <script>
+    let selectedProvider = 'google';
+
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session');
+    const error = params.get('error');
+
+    if (error) {
+      if (error === 'expired') {
+        showError('This session has expired. Ask the verifier to start a new one.');
+      } else if (error === 'auth_failed') {
+        showError('Authentication failed. Please try again.');
+      } else {
+        showError('Something went wrong. Please try again.');
+      }
+    } else if (sessionId) {
+      loadResult();
+    }
+    // Otherwise: show the find-session screen (default)
+
+    // Provider tabs
+    document.querySelectorAll('.provider-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        selectedProvider = tab.dataset.provider;
+        const label = document.getElementById('handle-label');
+        const input = document.getElementById('presenter-handle');
+        if (selectedProvider === 'google') {
+          label.textContent = 'Your Gmail address';
+          input.placeholder = 'name@gmail.com';
+        } else {
+          label.textContent = 'Your LinkedIn handle or email';
+          input.placeholder = 'jane-doe or name@email.com';
+        }
+      });
+    });
+
+    // Find session
+    document.getElementById('btn-find-session').addEventListener('click', async () => {
+      const handle = document.getElementById('presenter-handle').value.trim();
+      if (!handle) {
+        alert('Please enter your email or handle.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/simple/session/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ handle, provider: selectedProvider }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        // Show the appropriate auth button
+        const btnGoogle = document.getElementById('btn-google');
+        const btnLinkedin = document.getElementById('btn-linkedin');
+
+        if (data.provider === 'google') {
+          btnGoogle.href = `/api/simple/auth/google/start?session=${data.sessionId}`;
+          btnGoogle.style.display = 'flex';
+          btnLinkedin.style.display = 'none';
+        } else {
+          btnLinkedin.href = `/api/simple/auth/linkedin/start?session=${data.sessionId}`;
+          btnLinkedin.style.display = 'flex';
+          btnGoogle.style.display = 'none';
+        }
+
+        showScreen('screen-auth');
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+
+    async function loadResult() {
+      try {
+        const res = await fetch(`/api/simple/session/${sessionId}/result`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Session not found');
+
+        if (data.state === 'MATCHED' && data.words) {
+          renderWords(data.words);
+          showScreen('screen-words');
+        } else {
+          showError('Session is not ready yet. Please wait for the verifier.');
+        }
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function renderWords(words) {
+      const container = document.getElementById('presenter-words');
+      container.innerHTML = '';
+      words.forEach(word => {
+        const badge = document.createElement('div');
+        badge.className = 'word-badge';
+        badge.textContent = word;
+        container.appendChild(badge);
+      });
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showError(msg) {
+      document.getElementById('error-message').textContent = msg;
+      showScreen('screen-error');
+    }
+  </script>
+</body>
+</html>

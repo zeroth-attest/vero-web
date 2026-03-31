@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vero Simple Trust - Verify Someone</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="/assets/zeroth-0-favicon.png" type="image/png">
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <a href="index.html"><img src="/assets/vero-text.svg" alt="Vero"></a>
+      <div class="subtitle">Simple Trust</div>
+    </div>
+
+    <!-- Screen 1: Enter presenter info -->
+    <div id="screen-setup" class="screen active">
+      <div class="card">
+        <h2>Who do you want to verify?</h2>
+        <p>Enter their email or LinkedIn handle so we can match them to this session.</p>
+
+        <div class="provider-tabs">
+          <button class="provider-tab active" data-provider="google">Google</button>
+          <button class="provider-tab" data-provider="linkedin">LinkedIn</button>
+        </div>
+
+        <div class="form-group">
+          <label id="handle-label">Their Gmail address</label>
+          <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
+        </div>
+
+        <button class="btn btn-primary" id="btn-create-session">Start Verification Session</button>
+      </div>
+    </div>
+
+    <!-- Screen 2: Select words -->
+    <div id="screen-words" class="screen">
+      <div class="card">
+        <h2>Pick 5 secret words</h2>
+        <p>Select exactly 5 words from the list below. These will be your shared verification code.</p>
+
+        <div class="word-grid" id="word-grid"></div>
+        <div class="word-count"><span id="selected-count">0</span> of 5 selected</div>
+
+        <button class="btn btn-primary" id="btn-confirm-words" disabled>Confirm Words</button>
+      </div>
+    </div>
+
+    <!-- Screen 3: Waiting for presenter -->
+    <div id="screen-waiting" class="screen">
+      <div class="card">
+        <div class="waiting">
+          <div class="spinner"></div>
+          <h3>Waiting for authentication</h3>
+          <p>Tell the person you're verifying:</p>
+        </div>
+
+        <div class="callout">
+          <strong>"Go to verifywithvero.com and click 'I was asked to verify', then sign in with your <span id="waiting-provider">Google</span> account."</strong>
+        </div>
+
+        <p style="text-align: center; font-size: 13px; color: var(--text-muted);">This session will expire in <span id="timer">10:00</span></p>
+      </div>
+    </div>
+
+    <!-- Screen 4: Words revealed (matched) -->
+    <div id="screen-matched" class="screen">
+      <div class="card">
+        <h2>Session matched!</h2>
+
+        <div class="profile" id="presenter-profile">
+          <img class="profile-pic" id="profile-pic" src="" alt="">
+          <div>
+            <div class="profile-name" id="profile-name"></div>
+            <div class="profile-provider" id="profile-provider"></div>
+          </div>
+        </div>
+
+        <p>Ask them to read the words on their screen aloud:</p>
+
+        <div class="words-display" id="verifier-words"></div>
+
+        <div class="callout">
+          <strong>"Can you read me the five words on your screen?"</strong>
+        </div>
+
+        <button class="btn btn-success" id="btn-verified">Words Match &mdash; Verified!</button>
+        <button class="btn btn-outline" id="btn-no-match">Words Don't Match</button>
+      </div>
+    </div>
+
+    <!-- Screen 5: Trust confirmed -->
+    <div id="screen-confirmed" class="screen">
+      <div class="card success-card">
+        <div class="success-icon">&#10003;</div>
+        <h2>Trust Established</h2>
+        <p id="confirmed-text"></p>
+
+        <div class="upsell">
+          <p>Want to make this permanent? Add them to your Vero contacts &mdash; next time, you'll always know it's really them.</p>
+          <button class="btn btn-primary">Add to Vero Contacts</button>
+          <button class="btn btn-outline" onclick="window.location.href='index.html'">Maybe Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen: Error -->
+    <div id="screen-error" class="screen">
+      <div class="card">
+        <div class="error-msg" id="error-message">Something went wrong.</div>
+        <button class="btn btn-primary" onclick="window.location.href='verifier.html'">Try Again</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="/">Powered by Vero &middot; Zeroth Technology</a>
+    </div>
+  </div>
+
+  <script>
+    let sessionId = null;
+    let selectedProvider = 'google';
+    let selectedWords = [];
+    let sessionCreatedAt = null;
+
+    // Provider tabs
+    document.querySelectorAll('.provider-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        selectedProvider = tab.dataset.provider;
+        const label = document.getElementById('handle-label');
+        const input = document.getElementById('presenter-handle');
+        if (selectedProvider === 'google') {
+          label.textContent = 'Their Gmail address';
+          input.placeholder = 'name@gmail.com';
+        } else {
+          label.textContent = 'Their LinkedIn handle or email';
+          input.placeholder = 'jane-doe or name@email.com';
+        }
+      });
+    });
+
+    // Create session
+    document.getElementById('btn-create-session').addEventListener('click', async () => {
+      const handle = document.getElementById('presenter-handle').value.trim();
+      if (!handle) {
+        alert('Please enter their identifier.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/simple/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ presenterHandle: handle, provider: selectedProvider }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        sessionId = data.sessionId;
+        sessionCreatedAt = Date.now();
+        renderWordGrid(data.candidateWords);
+        showScreen('screen-words');
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+
+    function renderWordGrid(words) {
+      const grid = document.getElementById('word-grid');
+      grid.innerHTML = '';
+      selectedWords = [];
+      updateWordCount();
+
+      words.forEach(word => {
+        const chip = document.createElement('button');
+        chip.className = 'word-chip';
+        chip.textContent = word;
+        chip.addEventListener('click', () => toggleWord(chip, word));
+        grid.appendChild(chip);
+      });
+    }
+
+    function toggleWord(chip, word) {
+      if (chip.classList.contains('selected')) {
+        chip.classList.remove('selected');
+        selectedWords = selectedWords.filter(w => w !== word);
+      } else {
+        if (selectedWords.length >= 5) return;
+        chip.classList.add('selected');
+        selectedWords.push(word);
+      }
+      updateWordCount();
+      // Disable unselected chips when 5 are selected
+      document.querySelectorAll('.word-chip').forEach(c => {
+        if (!c.classList.contains('selected')) {
+          c.classList.toggle('disabled', selectedWords.length >= 5);
+        }
+      });
+    }
+
+    function updateWordCount() {
+      document.getElementById('selected-count').textContent = selectedWords.length;
+      document.getElementById('btn-confirm-words').disabled = selectedWords.length !== 5;
+    }
+
+    // Confirm words
+    document.getElementById('btn-confirm-words').addEventListener('click', async () => {
+      try {
+        const res = await fetch(`/api/simple/session/${sessionId}/words`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ words: selectedWords }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        document.getElementById('waiting-provider').textContent =
+          selectedProvider === 'google' ? 'Google' : 'LinkedIn';
+        showScreen('screen-waiting');
+        startTimer();
+        pollForMatch();
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+
+    // Timer
+    function startTimer() {
+      const timerEl = document.getElementById('timer');
+      const update = () => {
+        const elapsed = Math.floor((Date.now() - sessionCreatedAt) / 1000);
+        const remaining = Math.max(0, 600 - elapsed);
+        const min = Math.floor(remaining / 60);
+        const sec = remaining % 60;
+        timerEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+        if (remaining <= 0) {
+          showError('Session expired. Please start a new one.');
+          return;
+        }
+        setTimeout(update, 1000);
+      };
+      update();
+    }
+
+    // Poll for presenter match via SSE
+    function pollForMatch() {
+      const evtSource = new EventSource(`/api/simple/session/${sessionId}/poll`);
+
+      evtSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.state === 'MATCHED') {
+          evtSource.close();
+          showMatchedScreen(data.profile);
+        }
+      };
+
+      evtSource.onerror = () => {
+        evtSource.close();
+        // Try a regular fetch as fallback
+        setTimeout(async () => {
+          try {
+            const res = await fetch(`/api/simple/session/${sessionId}/result`);
+            const data = await res.json();
+            if (data.state === 'MATCHED') {
+              showMatchedScreen(data.profile);
+            }
+          } catch (e) { /* ignore, timer will handle expiry */ }
+        }, 2000);
+      };
+    }
+
+    function showMatchedScreen(profile) {
+      if (profile.picture) {
+        document.getElementById('profile-pic').src = profile.picture;
+        document.getElementById('profile-pic').style.display = 'block';
+      } else {
+        document.getElementById('profile-pic').style.display = 'none';
+      }
+      document.getElementById('profile-name').textContent = profile.name || 'Authenticated User';
+      document.getElementById('profile-provider').textContent =
+        `via ${selectedProvider === 'google' ? 'Google' : 'LinkedIn'}`;
+
+      const wordsContainer = document.getElementById('verifier-words');
+      wordsContainer.innerHTML = '';
+      selectedWords.forEach(word => {
+        const badge = document.createElement('div');
+        badge.className = 'word-badge';
+        badge.textContent = word;
+        wordsContainer.appendChild(badge);
+      });
+
+      showScreen('screen-matched');
+    }
+
+    // Verified / no match
+    document.getElementById('btn-verified').addEventListener('click', () => {
+      const name = document.getElementById('profile-name').textContent;
+      document.getElementById('confirmed-text').textContent =
+        `You verified that ${name} authenticated as themselves, right now, using their ${selectedProvider === 'google' ? 'Google' : 'LinkedIn'} identity.`;
+      showScreen('screen-confirmed');
+    });
+
+    document.getElementById('btn-no-match').addEventListener('click', () => {
+      showError('The words did not match. This could indicate an impersonation attempt. Do not trust this person\'s identity.');
+    });
+
+    // Screen management
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showError(msg) {
+      document.getElementById('error-message').textContent = msg;
+      showScreen('screen-error');
+    }
+  </script>
+</body>
+</html>

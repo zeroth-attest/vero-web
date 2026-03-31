@@ -1,0 +1,342 @@
+/* ==============================================
+   Font Import
+   ============================================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Outfit:wght@100..900&display=swap');
+
+/* ==============================================
+   CSS Variables
+   ============================================== */
+:root {
+  --primary-color: #3399FF;    /* Main brand color */
+  --background-color: #111;    /* Dark background */
+  --text-color: #fff;         /* Light text */
+  --info-color: #FFFACD;  /* Light yellow color */
+  --label-color: #4a86e8; /* Blue color for labels */
+  --secondary-text: #999; /* Gray for secondary text */
+  --input-background: #fff; /* White for input backgrounds */
+  --input-text: #333; /* Dark text for inputs */
+  --button-bg: #3399FF; /* Primary button background */
+  --button-hover: #2a73bb; /* Button hover state */
+  --disabled-bg: #6c757d; /* Disabled button background */
+}
+
+/* ==============================================
+   Reset & Base Styles
+   ============================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', 'Poppins', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Container */
+.container {
+  text-align: center;
+  max-width: 600px;
+  padding: 0 15px;
+  margin: 0 auto;
+}
+
+/* Typography */
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+h2.info-heading {
+  color: var(--info-color);
+  margin: 20px 0;
+}
+
+p {
+  margin-bottom: 15px;
+}
+
+.information-text {
+  color: var(--info-color);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Logo styles */
+.vero-logo {
+  width: 200px;
+  height: auto;
+  margin: 10px 0;
+}
+
+/* Form Controls */
+.input-field {
+  padding: 10px 12px;
+  font-size: 14px;
+  height: 45px;
+  width: 100%;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: var(--input-background);
+  color: var(--input-text);
+  text-align: center;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.input-field::placeholder {
+  color: var(--secondary-text);
+  font-size: 14px;
+}
+
+/* Select element */
+select.compact-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+  height: 45px;
+  padding: 10px 12px;
+  padding-right: 30px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--secondary-text);
+  background-color: #fafafa;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10'%3E%3Cpath fill='%23444' d='M1 3l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+select.compact-select:focus {
+  outline: none;
+  border-color: var(--label-color);
+  box-shadow: 0 0 0 2px rgba(74, 134, 232, 0.2);
+}
+
+select.compact-select option {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Labels */
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--secondary-text);
+  font-size: 0.85em;
+}
+
+label[for="session-key"] {
+  font-size: 1.1em;
+  color: var(--label-color);
+  font-weight: 500;
+}
+
+/* Button styles */
+.btn {
+  min-height: 60px;
+  padding: 10px 8px;
+  font-size: 16px;
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background-color: var(--button-hover);
+}
+
+.btn span {
+  line-height: 1.2;
+}
+
+.btn br {
+  display: block;
+  content: "";
+  margin: -2px 0;
+  line-height: 0.8;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Configuration section */
+.config-section {
+  margin-top: 30px;
+}
+
+.config-section table {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 300px;
+  border-spacing: 0;
+  border-collapse: separate;
+}
+
+/* Verification URL styles */
+#verification-url-preview-label {
+  color: #777;
+  font-size: 14px;
+  font-weight: normal;
+  margin-bottom: 2px;
+}
+
+#verification-url-preview {
+  color: #999;
+  font-size: 13px;
+  font-family: monospace;
+  word-break: break-all;
+  margin-top: 5px;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 380px) {
+  .button-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  button.btn {
+    width: 100%;
+  }
+  
+  td {
+    padding-right: 5px !important;
+    padding-left: 5px !important;
+  }
+}
+
+/* ==============================================
+   Modal Styles
+   ============================================== */
+.modal {
+  position: fixed; /* Stay in place */
+  z-index: 1000; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+  display: flex; /* Use flexbox for centering */
+  align-items: center; /* Vertical center */
+  justify-content: center; /* Horizontal center */
+}
+
+.modal-content {
+  background-color: #2a2a2a; /* Darker background for modal */
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 350px; /* Max width */
+  text-align: center;
+  position: relative;
+}
+
+.close-btn {
+  color: #aaa;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: #fff; /* Brighter on hover */
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ==============================================
+   End Modal Styles
+   ============================================== */
+
+/* =============================================
+   The following styles are kept for reference but are currently unused
+   =============================================
+
+.field-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+}
+
+.inline-fields {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+}
+
+.primary-heading {
+  color: var(--primary-color);
+}
+
+.btn-secondary {
+  background-color: var(--disabled-bg);
+  color: var(--text-color);
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+#qr-code {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem auto;
+}
+
+#qr-code img {
+  margin: 0 auto;
+}
+
+*/

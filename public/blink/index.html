@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags for proper rendering and character encoding -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vero Blink Sequence</title>
+    <!-- Stylesheet and QR code library references -->
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <!-- Logo section -->
+    <div id="logo-section" class="container">
+        <img src="../assets/vero-logo.svg" alt="Vero Logo" class="vero-logo" />
+    </div>
+
+    <!-- Main content container -->
+    <div class="container">
+        <!-- Blink sequence instructions and controls -->
+        <div id="text-section" class="container">
+            <h1>live session key blink sequence</h1> <br />
+            <!-- User instructions - will be updated based on key type -->
+            <div id="session-instructions" style="max-width: 300px; margin: 0 auto;">
+                <!-- Default instructions for session key (type=s) -->
+                <p class="information-text"> Click the button below then hold your phone near the side of your face as if you were making a phone call. </p>
+            </div>
+            <br />
+            <!-- Blink controls -->
+            <div class="button-row" style="display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-primary" id="start-btn">Start Blinking</button>
+            </div>
+            <br />
+            <!-- Brightness Instruction -->
+            <p class="information-text" style="margin-top: 15px; color: grey; font-style: normal; max-width: 300px; margin-left: auto; margin-right: auto;">
+                Please increase your screen's brightness to maximum for best results.
+                <br />(You may need to manually adjust this in your device settings).
+            </p>
+            <br />
+            <!-- Share Button moved here -->
+            <button class="btn btn-primary" id="share-btn" style="margin-top: 10px;">Share Verification Link</button>
+            <br />
+        </div>
+        <!-- Stop button (hidden by default) -->
+        <button class="btn btn-primary" id="stop-btn" style="display: none;">Stop Blinking</button>
+    </div>
+
+    <!-- Share Modal (hidden by default) -->
+    <div id="share-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" id="close-share-modal">&times;</span>
+            <h3 style="margin-top: 0; margin-bottom: 10px;">Scan to Share Verification</h3>
+            <div id="share-qr-code" style="display: inline-block; margin-top: 10px; margin-bottom: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- QR code section for desktop users (hidden by default) -->
+    <div id="qr-section" class="container" style="display: none;">
+        <h2>Mobile Access Required</h2>
+        <p class="information-text">Please scan this QR code with your mobile device to continue:</p>
+        <br />
+        <div id="qr-code" class="container" style="display: flex; justify-content: center; align-items: center;"></div>
+    </div>
+
+    <!-- Inline JavaScript (moved from script.js) -->
+    <script>
+        // ==============================================
+        // Global State Variables
+        // ==============================================
+        let isBlinking = false;                    // Tracks if sequence is currently blinking
+        let blinkInterval = null;                  // Holds the interval ID for the blink sequence
+        const DEFAULT_BLINK_RATE = 200;            // Default blink rate in milliseconds
+
+        // ==============================================
+        // Utility Functions
+        // ==============================================
+
+        /**
+         * Detects if the current device is mobile
+         * @returns {boolean} True if device is mobile, false otherwise
+         */
+        function isMobileDevice() {
+            // Check user agent string for mobile devices
+            const mobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // Check if device supports touch
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            
+            return mobileUserAgent || isTouchDevice;
+        }
+
+        /**
+         * Converts hexadecimal string to binary
+         * @param {string} hex - Hex string
+         * @returns {string} Binary string padded to appropriate length
+         */
+        function hexToBinary(hex) {
+            // Convert to binary and pad to appropriate length (4 bits per hex character)
+            return parseInt(hex, 16).toString(2).padStart(hex.length * 4, '0');
+        }
+
+        /**
+         * Converts binary string to blink sequence
+         * @param {string} binary - Binary string
+         * @returns {string} Sequence of G (green/1), B (blue/0), _ (delimiter), R (terminator)
+         */
+        function binaryToBlinkSequence(binary) {
+            let sequence = 'R_'; // Begin with a terminator
+            for (let bit of binary) {
+                sequence += bit === '1' ? 'G_' : 'B_';
+            }
+            return sequence;
+        }
+
+        /**
+         * Extracts session key from URL query parameters
+         * @returns {Object} Object containing key, blink_rate, and type
+         */
+        function getSessionParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const keyParam = urlParams.get('key') || '';
+            
+            // Check if comma-separated format or regular parameter
+            if (keyParam.includes(',')) {
+                // Parse key=ABCDEF,blink_rate=200,type=s format
+                const parts = keyParam.split(',');
+                const sessionKey = parts[0];
+                
+                let blinkRate = DEFAULT_BLINK_RATE;
+                let keyType = 's';
+                
+                // Find blink_rate and type parameters
+                for (let i = 1; i < parts.length; i++) {
+                    if (parts[i].startsWith('blink_rate=')) {
+                        blinkRate = parseInt(parts[i].split('=')[1]) || DEFAULT_BLINK_RATE;
+                    } else if (parts[i].startsWith('type=')) {
+                        keyType = parts[i].split('=')[1] || 's';
+                    }
+                }
+                
+                return { 
+                    sessionKey: sessionKey, 
+                    blinkRate: blinkRate, 
+                    keyType: keyType 
+                };
+            } else {
+                // Regular parameters
+                return {
+                    sessionKey: keyParam,
+                    blinkRate: parseInt(urlParams.get('blink_rate')) || DEFAULT_BLINK_RATE,
+                    keyType: urlParams.get('type') || 's'
+                };
+            }
+        }
+
+        /**
+         * Updates the instructions based on key type
+         * @param {string} keyType - The type of key ('s' for session, 'm' for multiplier)
+         */
+        function updateInstructions(keyType) {
+            const instructionsDiv = document.getElementById('session-instructions');
+            if (!instructionsDiv) return;
+            
+            // Clear existing instructions
+            instructionsDiv.innerHTML = '';
+            
+            if (keyType === 'm') {
+                // Instructions for multiplier key
+                const multiplierInstructions = document.createElement('p');
+                multiplierInstructions.className = 'information-text';
+                multiplierInstructions.textContent = 'This is a multiplier session key, you will open this in the Vero app to continue.';
+                instructionsDiv.appendChild(multiplierInstructions);
+            } else {
+                // Default instructions for session key - simplified to a single paragraph
+                const instructions = document.createElement('p');
+                instructions.className = 'information-text';
+                instructions.textContent = 'Click the button below then hold your phone near the side of your face as if you were making a phone call.';
+                instructionsDiv.appendChild(instructions);
+            }
+        }
+
+        /**
+         * Executes the blink sequence with specified timing
+         * @param {string} sequence - String of blink instructions (G/B/R/_)
+         * @param {number} rate - Milliseconds between each blink (default: DEFAULT_BLINK_RATE)
+         */
+        function executeBlinkSequence(sequence, rate = DEFAULT_BLINK_RATE) {
+            let currentIndex = 0;
+            // Color mapping for sequence characters - Brighter Red and Blue (less red in blue)
+            const colors = {
+                'G': '#00FF00', // Green represents binary 1 (remains pure green)
+                'B': '#0070FF', // Mostly Blue, with some white added for brightness
+                'R': '#FF2000', // Brighter Red (added some green/blue, more salmon/pink)
+                '_': '#000000'  // Black serves as visual delimiter
+            };
+
+            // Set up interval for color changes
+            blinkInterval = setInterval(() => {
+                if (currentIndex >= sequence.length) {
+                    currentIndex = 0; // Reset to start of sequence
+                }
+
+                const currentChar = sequence[currentIndex];
+                document.body.style.backgroundColor = colors[currentChar];
+                currentIndex++;
+            }, rate);
+        }
+
+        /**
+         * Initiates the blinking sequence
+         * @param {string} sessionKey - Hex code of any length
+         * @param {number} rate - Milliseconds between blinks (default: DEFAULT_BLINK_RATE)
+         */
+        function startBlinking(sessionKey, rate = DEFAULT_BLINK_RATE) {
+            if (!sessionKey) {
+                console.log("No session key provided");
+                return;
+            }
+            
+            // Extract just the hex code part if it contains other data
+            const hexCode = sessionKey.split(',')[0];
+            
+            try {
+                // Convert hex to binary, then to blink sequence
+                const binary = hexToBinary(hexCode);
+                const sequence = binaryToBlinkSequence(binary);
+                
+                // Update UI and start sequence
+                isBlinking = true;
+                const textSection = document.getElementById('text-section');
+                const stopBtn = document.getElementById('stop-btn');
+                
+                if (textSection) textSection.style.display = 'none';
+                if (stopBtn) stopBtn.style.display = 'block';
+                
+                executeBlinkSequence(sequence, rate);
+            } catch (e) {
+                console.error("Error starting blink sequence:", e);
+                alert("There was an error processing the session key. Please try again.");
+            }
+        }
+
+        /**
+         * Stops the blinking sequence and resets UI
+         */
+        function stopBlinking() {
+            // Clear the blink interval if it exists
+            if (blinkInterval) {
+                clearInterval(blinkInterval);
+                blinkInterval = null;
+            }
+            
+            // Reset state and UI
+            isBlinking = false;
+            document.body.style.backgroundColor = '#000000';
+            
+            const textSection = document.getElementById('text-section');
+            const stopBtn = document.getElementById('stop-btn');
+            
+            if (textSection) textSection.style.display = 'block';
+            if (stopBtn) stopBtn.style.display = 'none';
+        }
+
+        // ==============================================
+        // Page Load Handler
+        // ==============================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get DOM elements
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const qrSection = document.getElementById('qr-section');
+            const textSection = document.getElementById('text-section');
+            const qrCode = document.getElementById('qr-code');
+            const shareBtn = document.getElementById('share-btn'); // New share button
+            // Select modal elements
+            const shareModal = document.getElementById('share-modal');
+            const shareQrCodeDiv = document.getElementById('share-qr-code'); // Div for share QR inside modal
+            const closeShareModalBtn = document.getElementById('close-share-modal'); // Close button for modal
+
+            // Get URL parameters using the enhanced function
+            const params = getSessionParams();
+            const { sessionKey, blinkRate, keyType } = params;
+            
+            // Update instructions based on key type
+            updateInstructions(keyType);
+            
+            if (!isMobileDevice()) {
+                // Desktop behavior: Show QR code
+                if (textSection) textSection.style.display = 'none';
+                if (qrSection) qrSection.style.display = 'block';
+                
+                // Generate QR code with current URL
+                const currentUrl = new URL(window.location.href);
+                const mobileUrl = currentUrl.toString();
+                
+                if (qrCode && typeof QRCode !== 'undefined') {
+                    // Configure and create QR code
+                    new QRCode(qrCode, {
+                        text: mobileUrl,
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#f6f6f6",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    // Make QR code clickable for desktop override
+                    qrCode.style.cursor = 'pointer';
+                    qrCode.addEventListener('click', () => {
+                        qrSection.style.display = 'none';
+                        textSection.style.display = 'block';
+                        // Don't auto-start blinking, let user click the button
+                    });
+                }
+            } else {
+                // Mobile behavior: Show blink interface
+                if (qrSection) qrSection.style.display = 'none';
+                if (textSection) textSection.style.display = 'block';
+                
+                // No longer auto-starting the blink sequence
+            }
+
+            // Start button click handler
+            if (startBtn) {
+                startBtn.addEventListener('click', () => {
+                    if (sessionKey) {
+                        startBlinking(sessionKey, blinkRate);
+                    } else {
+                        alert('No session key found in URL parameters');
+                    }
+                });
+            }
+
+            // Stop button click handler
+            if (stopBtn) {
+                stopBtn.addEventListener('click', stopBlinking);
+            }
+
+            // Share button click handler
+            if (shareBtn) {
+                shareBtn.addEventListener('click', () => {
+                    const { sessionKey, blinkRate, keyType } = getSessionParams(); // Re-fetch params
+
+                    if (!sessionKey) {
+                        alert('Session key is missing. Cannot generate share link.');
+                        return;
+                    }
+
+                    if (typeof QRCode === 'undefined') {
+                        alert('QR Code library not loaded.');
+                        return;
+                    }
+
+                    // Construct the verification URL
+                    const baseUrl = 'zeroth-vero.replit.app/verify/detect'; // Use origin + specific path
+                    const combinedQueryValue = `key=${sessionKey},blink_rate=${blinkRate},type=${keyType}`;
+                    const shareUrl = `${baseUrl}?${combinedQueryValue}`;
+
+                    console.log("Generating QR code for:", shareUrl);
+
+                    // Clear previous QR code
+                    shareQrCodeDiv.innerHTML = '';
+
+                    // Generate new QR code inside the modal
+                    try {
+                        new QRCode(shareQrCodeDiv, {
+                            text: shareUrl,
+                            width: 128, // Smaller QR code
+                            height: 128,
+                            colorDark: "#000000",
+                            colorLight: "#f6f6f6",
+                            correctLevel: QRCode.CorrectLevel.M // Medium correction level is fine here
+                        });
+
+                        // Show the modal
+                        if (shareModal) {
+                            shareModal.style.display = 'block';
+                        }
+                    } catch (e) {
+                        console.error("Error generating QR code:", e);
+                        alert("Failed to generate QR code.");
+                    }
+                });
+            }
+
+            // Close Share Modal button click handler
+            if (closeShareModalBtn && shareModal) {
+                closeShareModalBtn.addEventListener('click', () => {
+                    shareModal.style.display = 'none';
+                    shareQrCodeDiv.innerHTML = ''; // Clear QR code when closing
+                });
+            }
+
+            // Optional: Close modal if clicking outside the modal content
+            window.addEventListener('click', (event) => {
+                if (event.target == shareModal) {
+                    shareModal.style.display = 'none';
+                    shareQrCodeDiv.innerHTML = ''; // Clear QR code
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vero Simple Trust</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="/assets/zeroth-0-favicon.png" type="image/png">
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <img src="/assets/vero-text.svg" alt="Vero">
+      <div class="subtitle">Simple Trust</div>
+    </div>
+
+    <div class="card">
+      <h2>Verify anyone, right now</h2>
+      <p>Confirm someone is who they say they are using their LinkedIn or Google identity. No app install, no account needed.</p>
+    </div>
+
+    <div class="role-buttons">
+      <button class="role-btn" onclick="window.location.href='verifier.html'">
+        <span class="role-icon">&#128270;</span>
+        <div class="role-text">
+          <h3>I want to verify someone</h3>
+          <p>Start a session and ask someone to prove their identity</p>
+        </div>
+      </button>
+
+      <button class="role-btn" onclick="window.location.href='presenter.html'">
+        <span class="role-icon">&#128100;</span>
+        <div class="role-text">
+          <h3>I was asked to verify</h3>
+          <p>Someone asked you to go to this site and sign in</p>
+        </div>
+      </button>
+    </div>
+
+    <div class="card" style="margin-top: 24px;">
+      <h2>How it works</h2>
+      <p style="margin-bottom: 12px;"><strong>1.</strong> You enter who you want to verify and pick 5 secret words</p>
+      <p style="margin-bottom: 12px;"><strong>2.</strong> Ask them to visit this site and sign in with LinkedIn or Google</p>
+      <p style="margin-bottom: 12px;"><strong>3.</strong> The same 5 words appear on both screens</p>
+      <p style="margin-bottom: 0;"><strong>4.</strong> Ask them to read the words aloud &mdash; if they match, you know it's really them</p>
+    </div>
+
+    <div class="footer">
+      <a href="/">Powered by Vero &middot; Zeroth Technology</a>
+    </div>
+  </div>
+</body>
+</html>
