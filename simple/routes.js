@@ -148,9 +148,17 @@ router.get('/auth/:provider/start', (req, res) => {
     return res.status(404).json({ error: 'Session not found or expired' });
   }
 
-  const authUrl = oauth.getAuthorizationUrl(provider, sessionId);
+  const authUrl = oauth.getAuthorizationUrl(provider, sessionId, req);
   res.redirect(authUrl);
 });
+
+// Determine the correct presenter page path based on hostname
+// On voice subdomain: files are at root. On main domain / localhost: files are at /simple/
+function presenterPath(req) {
+  const host = req.hostname;
+  if (host === 'voice.vero.technology') return '/presenter.html';
+  return '/simple/presenter.html';
+}
 
 // OAuth callback handler (shared logic for GET and POST)
 async function handleOAuthCallback(req, res) {
@@ -171,7 +179,7 @@ async function handleOAuthCallback(req, res) {
 
   const session = store.getSession(stateData.sessionId);
   if (!session) {
-    return res.redirect('/simple/presenter.html?error=expired');
+    return res.redirect(`${presenterPath(req)}?error=expired`);
   }
 
   try {
@@ -180,7 +188,10 @@ async function handleOAuthCallback(req, res) {
       extras.user = appleUser;
     }
 
-    const profile = await oauth.exchangeCodeForProfile(provider, code, extras);
+    // Use the origin from state so the redirect_uri in the token exchange
+    // matches the one used when starting the OAuth flow
+    const baseUrl = stateData.origin || oauth.getBaseUrlFromRequest(req);
+    const profile = await oauth.exchangeCodeForProfile(provider, code, extras, baseUrl);
 
     // Match the presenter's identity to the session
     // For all providers: match by email (primary strategy)
@@ -205,10 +216,10 @@ async function handleOAuthCallback(req, res) {
     store.matchPresenter(session.id, profile);
 
     // Redirect presenter to their result screen
-    res.redirect(`/simple/presenter.html?session=${session.id}`);
+    res.redirect(`${presenterPath(req)}?session=${session.id}`);
   } catch (err) {
     console.error('OAuth callback error:', err);
-    res.redirect('/simple/presenter.html?error=auth_failed');
+    res.redirect(`${presenterPath(req)}?error=auth_failed`);
   }
 }
 

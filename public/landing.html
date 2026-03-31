@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vero - Real Time Authentication</title>
+  <link rel="icon" href="/assets/zeroth-0-favicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3399FF;
+      --primary-glow: rgba(51, 153, 255, 0.3);
+      --accent: #FF9933;
+      --accent-glow: rgba(255, 153, 51, 0.2);
+      --bg: #0a0a0a;
+      --bg-card: #111;
+      --bg-card-hover: #1a1a1a;
+      --text: #ffffff;
+      --text-muted: #888;
+      --text-dim: #555;
+      --border: #222;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Outfit', 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background grid ── */
+    .bg-grid {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image:
+        linear-gradient(rgba(51, 153, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(51, 153, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+      animation: gridPulse 8s ease-in-out infinite;
+    }
+
+    @keyframes gridPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    .content { position: relative; z-index: 1; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .logo {
+      width: 280px;
+      max-width: 80vw;
+      margin-bottom: 12px;
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    .logo-subtitle {
+      font-size: 11px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 50px;
+      animation: fadeInDown 0.8s ease-out 0.2s both;
+    }
+
+    /* Typewriter line */
+    .typewriter-line {
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: 300;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      min-height: 1.4em;
+      animation: fadeIn 0.8s ease-out 0.4s both;
+    }
+
+    .typewriter-word {
+      color: var(--primary);
+      font-weight: 500;
+      border-right: 2px solid var(--primary);
+      padding-right: 2px;
+      animation: blink-cursor 0.7s step-end infinite;
+    }
+
+    @keyframes blink-cursor {
+      0%, 100% { border-color: var(--primary); }
+      50% { border-color: transparent; }
+    }
+
+    .hero-tagline {
+      font-size: clamp(14px, 2.5vw, 18px);
+      color: var(--text-dim);
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      animation: fadeIn 0.8s ease-out 0.6s both;
+    }
+
+    .hero-headline {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--text), var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeIn 0.8s ease-out 0.8s both;
+    }
+
+    /* Feature badges */
+    .feature-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 50px;
+      animation: fadeIn 0.8s ease-out 1s both;
+    }
+
+    .feature-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 1px solid var(--accent);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-glow);
+      opacity: 0;
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    .feature-badge:nth-child(1) { animation-delay: 1.2s; }
+    .feature-badge:nth-child(2) { animation-delay: 1.4s; }
+    .feature-badge:nth-child(3) { animation-delay: 1.6s; }
+
+    .badge-check {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── Product Cards ── */
+    .products {
+      padding: 40px 20px 80px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .product-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      overflow: hidden;
+      text-decoration: none;
+      color: var(--text);
+      display: block;
+    }
+
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, rgba(51, 153, 255, 0.05), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .product-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(51, 153, 255, 0.15);
+    }
+
+    .product-card:hover::before { opacity: 1; }
+
+    .product-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: rgba(51, 153, 255, 0.1);
+      border: 1px solid rgba(51, 153, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+
+    .product-card h3 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .product-card .product-sub {
+      font-size: 13px;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .product-card .product-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .product-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: var(--primary);
+      color: var(--text);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .product-card:hover .product-cta { background: #2a7acc; }
+
+    /* ── Trust section ── */
+    .trust-section {
+      padding: 80px 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .trust-section h2 {
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
+
+    .identity-providers {
+      font-size: clamp(15px, 2.5vw, 18px);
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .identity-providers .byoi {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Value props */
+    .value-props {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .value-prop {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      text-align: left;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255, 153, 51, 0.04);
+      border: 1px solid rgba(255, 153, 51, 0.1);
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    .value-prop.visible {
+      animation: slideInLeft 0.5s ease-out forwards;
+    }
+
+    .value-prop:nth-child(1).visible { animation-delay: 0s; }
+    .value-prop:nth-child(2).visible { animation-delay: 0.15s; }
+    .value-prop:nth-child(3).visible { animation-delay: 0.3s; }
+
+    .value-prop-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      color: var(--accent);
+      font-size: 18px;
+      margin-top: 2px;
+    }
+
+    .value-prop p {
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      padding: 40px 20px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    .site-footer a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .site-footer a:hover { color: var(--text-muted); }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Keyframes ── */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .hero { padding: 30px 16px; }
+      .logo { width: 200px; }
+      .feature-badges { flex-direction: column; align-items: center; }
+      .products-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <div class="content">
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <img src="/assets/vero-text.svg" alt="Vero" class="logo">
+
+      <div class="typewriter-line">
+        Don't just trust someone else's <span class="typewriter-word" id="typewriter"></span>
+      </div>
+
+      <p class="hero-tagline">
+        Anyone can look or sound like someone else.<br>
+        Anyone can show a "secure looking" badge.
+      </p>
+
+      <h1 class="hero-headline">Authenticate real people in real time</h1>
+
+      <div class="feature-badges">
+        <div class="feature-badge">
+          <span class="badge-check">&#10003;</span>
+          No required enrollment
+        </div>
+        <div class="feature-badge">
+          <span class="badge-check">&#10003;</span>
+          No stored personal data
+        </div>
+        <div class="feature-badge">
+          <span class="badge-check">&#10003;</span>
+          No cost for personal use
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Products ── -->
+    <section class="products reveal">
+      <div class="products-grid">
+        <a href="https://voice.vero.technology" class="product-card">
+          <div class="product-icon">&#128483;</div>
+          <div class="product-sub">Vero Voice</div>
+          <h3>Verify Voice</h3>
+          <p class="product-desc">A verbal one-time passphrase tied to their identity. They sign in, you hear the words. Match confirmed.</p>
+          <div class="product-cta">Launch Vero Voice &rarr;</div>
+        </a>
+
+        <a href="https://video.vero.technology" class="product-card">
+          <div class="product-icon">&#128247;</div>
+          <div class="product-sub">Vero Video</div>
+          <h3>Verify Video</h3>
+          <p class="product-desc">An optical one-time biometric that you can see. A blinking light sequence reflected off their face in real time.</p>
+          <div class="product-cta">Launch Vero Video &rarr;</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── Trust Section ── -->
+    <section class="trust-section">
+      <h2 class="reveal">You choose what you will trust to know someone's identity</h2>
+
+      <p class="identity-providers reveal">
+        Sign in with Google, LinkedIn, GitHub, Microsoft, Facebook, Apple &mdash;
+        <span class="byoi">Bring Your Own Identity!</span>
+      </p>
+
+      <div class="value-props">
+        <div class="value-prop">
+          <span class="value-prop-icon">&#9758;</span>
+          <p>You challenge someone with questions you control</p>
+        </div>
+        <div class="value-prop">
+          <span class="value-prop-icon">&#128066;</span>
+          <p>You hear or see their response</p>
+        </div>
+        <div class="value-prop">
+          <span class="value-prop-icon">&#9989;</span>
+          <p>You know it's real because you're involved</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Footer ── -->
+    <footer class="site-footer">
+      <div class="footer-links">
+        <a href="https://voice.vero.technology">Vero Voice</a>
+        <a href="https://video.vero.technology">Vero Video</a>
+      </div>
+      <a href="https://zeroth.technology">Powered by Zeroth Technology</a>
+    </footer>
+  </div>
+
+  <script>
+    // ── Typewriter effect ──
+    const words = ['server', 'computer', 'security', 'camera', 'phone', 'algorithm'];
+    const el = document.getElementById('typewriter');
+    let wordIdx = 0;
+    let charIdx = 0;
+    let deleting = false;
+    let pause = 0;
+
+    function typewrite() {
+      const word = words[wordIdx];
+      if (pause > 0) {
+        pause--;
+        setTimeout(typewrite, 50);
+        return;
+      }
+
+      if (!deleting) {
+        el.textContent = word.slice(0, charIdx + 1);
+        charIdx++;
+        if (charIdx >= word.length) {
+          deleting = true;
+          pause = 30; // pause at full word
+        }
+        setTimeout(typewrite, 80);
+      } else {
+        el.textContent = word.slice(0, charIdx);
+        charIdx--;
+        if (charIdx < 0) {
+          deleting = false;
+          charIdx = 0;
+          wordIdx = (wordIdx + 1) % words.length;
+          pause = 8;
+        }
+        setTimeout(typewrite, 40);
+      }
+    }
+    typewrite();
+
+    // ── Scroll reveal ──
+    const reveals = document.querySelectorAll('.reveal');
+    const valueProps = document.querySelectorAll('.value-prop');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    reveals.forEach(el => observer.observe(el));
+    valueProps.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

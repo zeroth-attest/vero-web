@@ -100,23 +100,36 @@ function generateAppleClientSecret() {
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
-function getCallbackUrl(provider) {
-  const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
+function getCallbackUrl(provider, baseUrl) {
+  // baseUrl can be passed from the request, or fall back to env / default
+  baseUrl = baseUrl || process.env.BASE_URL || 'http://localhost:8080';
   return `${baseUrl}/api/simple/auth/${provider}/callback`;
 }
 
-function getAuthorizationUrl(provider, sessionId) {
+// Derive the base URL from an Express request object (works behind proxies)
+function getBaseUrlFromRequest(req) {
+  if (!req) return null;
+  const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+  const host = req.get('host');
+  return `${protocol}://${host}`;
+}
+
+function getAuthorizationUrl(provider, sessionId, req) {
   const config = providers[provider];
   if (!config) throw new Error(`Unknown provider: ${provider}`);
+
+  const baseUrl = getBaseUrlFromRequest(req);
 
   const state = Buffer.from(JSON.stringify({
     sessionId,
     nonce: crypto.randomBytes(8).toString('hex'),
+    // Remember which host initiated the flow so the callback can redirect correctly
+    origin: baseUrl,
   })).toString('base64url');
 
   const params = new URLSearchParams({
     client_id: config.clientId(),
-    redirect_uri: getCallbackUrl(provider),
+    redirect_uri: getCallbackUrl(provider, baseUrl),
     response_type: 'code',
     scope: config.scopes,
     state,
@@ -133,7 +146,7 @@ function getAuthorizationUrl(provider, sessionId) {
 // ──────────────────────────────────────────────
 // Profile extraction (per-provider)
 // ──────────────────────────────────────────────
-async function exchangeCodeForProfile(provider, code, extras = {}) {
+async function exchangeCodeForProfile(provider, code, extras = {}, baseUrl = null) {
   const config = providers[provider];
   if (!config) throw new Error(`Unknown provider: ${provider}`);
 
@@ -152,7 +165,7 @@ async function exchangeCodeForProfile(provider, code, extras = {}) {
       client_secret: config.clientSecret(),
       code,
       grant_type: 'authorization_code',
-      redirect_uri: getCallbackUrl(provider),
+      redirect_uri: getCallbackUrl(provider, baseUrl),
     }).toString(),
   });
 
@@ -321,6 +334,8 @@ module.exports = {
   PROVIDER_META,
   VALID_PROVIDERS,
   getAuthorizationUrl,
+  getCallbackUrl,
+  getBaseUrlFromRequest,
   exchangeCodeForProfile,
   parseState,
 };

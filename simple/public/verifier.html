@@ -79,7 +79,7 @@
         </div>
 
         <div class="callout">
-          <strong>"Go to verifywithvero.com and click 'I was asked to verify', then sign in with your <span id="waiting-provider">Google</span> account."</strong>
+          <strong>"Go to <span id="site-url">voice.vero.technology</span> and click 'I was asked to verify', then sign in with your <span id="waiting-provider">Google</span> account."</strong>
         </div>
 
         <p style="text-align: center; font-size: 13px; color: var(--text-muted);">This session will expire in <span id="timer">10:00</span></p>
@@ -155,6 +155,12 @@
     let selectedProvider = 'google';
     let selectedWords = [];
     let sessionCreatedAt = null;
+
+    // Set the site URL in the instructions dynamically
+    const siteUrlEl = document.getElementById('site-url');
+    if (siteUrlEl) {
+      siteUrlEl.textContent = window.location.host;
+    }
 
     // Provider tabs
     document.querySelectorAll('.provider-tab').forEach(tab => {
