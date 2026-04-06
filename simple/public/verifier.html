@@ -18,7 +18,7 @@
     <div id="screen-setup" class="screen active">
       <div class="card">
         <h2>Who do you want to verify?</h2>
-        <p>Choose how they'll authenticate, then enter their handle or email.</p>
+        <p>Choose an identity provider and enter their handle or email. You can require multiple providers for stronger verification.</p>
 
         <div class="provider-grid" id="provider-grid">
           <button class="provider-tab active" data-provider="google">
@@ -37,7 +37,7 @@
             <svg class="provider-tab-icon" viewBox="0 0 24 24"><rect fill="#F25022" x="1" y="1" width="10" height="10"/><rect fill="#7FBA00" x="13" y="1" width="10" height="10"/><rect fill="#00A4EF" x="1" y="13" width="10" height="10"/><rect fill="#FFB900" x="13" y="13" width="10" height="10"/></svg>
             Microsoft
           </button>
-          <button class="provider-tab" data-provider="facebook">
+          <button class="provider-tab provider-coming-soon" data-provider="facebook" data-coming-soon="true">
             <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
             Facebook
           </button>
@@ -46,24 +46,32 @@
             Apple
           </button>
         </div>
+        <p class="provider-contact">Want to see your app here? <a href="mailto:connect@vero.technology">Contact us</a></p>
 
         <div class="form-group">
           <label id="handle-label">Their Gmail address</label>
           <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
         </div>
 
-        <button class="btn btn-primary" id="btn-create-session">Start Verification Session</button>
+        <button class="btn btn-primary" id="btn-add-anchor">Add Trust Anchor</button>
+
+        <div id="anchor-list" class="anchor-list" style="display:none;">
+          <label class="anchor-list-label">Required trust anchors:</label>
+          <div id="anchor-items"></div>
+        </div>
+
+        <button class="btn btn-success" id="btn-create-session" style="display:none;">Start Verification Session</button>
       </div>
     </div>
 
     <!-- Screen 2: Select words -->
     <div id="screen-words" class="screen">
       <div class="card">
-        <h2>Pick 5 secret words</h2>
-        <p>Select exactly 5 words from the list below. These will be your shared verification code.</p>
+        <h2>Pick 3 secret words</h2>
+        <p>Select exactly 3 words from the list below. These will be your shared verification code.</p>
 
         <div class="word-grid" id="word-grid"></div>
-        <div class="word-count"><span id="selected-count">0</span> of 5 selected</div>
+        <div class="word-count"><span id="selected-count">0</span> of 3 selected</div>
 
         <button class="btn btn-primary" id="btn-confirm-words" disabled>Confirm Words</button>
       </div>
@@ -79,8 +87,13 @@
         </div>
 
         <div class="callout">
-          <strong>"Go to <span id="site-url">voice.vero.technology</span> and click 'I was asked to verify', then sign in with your <span id="waiting-provider">Google</span> account."</strong>
+          <strong>"Go to <span id="site-url">voice.vero.technology</span> and click 'I was asked to verify', then sign in with your <span id="waiting-providers">Google</span> account."</strong>
         </div>
+
+        <div class="words-display" id="waiting-words"></div>
+        <p style="text-align: center; font-size: 13px; color: var(--text-muted); margin-top: -8px;">Your passphrase &mdash; do not share until identity is confirmed</p>
+
+        <div id="auth-progress" class="auth-progress" style="display:none;"></div>
 
         <p style="text-align: center; font-size: 13px; color: var(--text-muted);">This session will expire in <span id="timer">10:00</span></p>
       </div>
@@ -91,20 +104,14 @@
       <div class="card">
         <h2>Session matched!</h2>
 
-        <div class="profile" id="presenter-profile">
-          <img class="profile-pic" id="profile-pic" src="" alt="">
-          <div>
-            <div class="profile-name" id="profile-name"></div>
-            <div class="profile-provider" id="profile-provider"></div>
-          </div>
-        </div>
+        <div id="matched-profiles"></div>
 
         <p>Ask them to read the words on their screen aloud:</p>
 
         <div class="words-display" id="verifier-words"></div>
 
         <div class="callout">
-          <strong>"Can you read me the five words on your screen?"</strong>
+          <strong>"Can you read me the three words on your screen?"</strong>
         </div>
 
         <button class="btn btn-success" id="btn-verified">Words Match &mdash; Verified!</button>
@@ -121,9 +128,21 @@
 
         <div class="upsell">
           <p>Want to make this permanent? Add them to your Vero contacts &mdash; next time, you'll always know it's really them.</p>
-          <button class="btn btn-primary">Add to Vero Contacts</button>
+          <button class="btn btn-primary" id="btn-add-contacts">Add to Vero Contacts</button>
           <button class="btn btn-outline" onclick="window.location.href='index.html'">Maybe Later</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal: Vero App required -->
+    <div id="modal-overlay" class="modal-overlay" style="display:none;">
+      <div class="modal">
+        <div class="modal-icon">
+          <img src="/assets/vero-text.svg" alt="Vero" style="height: 28px;">
+        </div>
+        <h3>This requires the Vero app</h3>
+        <p>Persistent identity verification and contact management are coming soon in the Vero app for iOS and Android.</p>
+        <button class="btn btn-primary" id="btn-modal-close">Got it</button>
       </div>
     </div>
 
@@ -136,7 +155,7 @@
     </div>
 
     <div class="footer">
-      <a href="/">Powered by Vero &middot; Zeroth Technology</a>
+      <a href="https://zeroth.technology">Zeroth Attest, Inc 2026</a>
     </div>
   </div>
 
@@ -144,7 +163,7 @@
     // Provider metadata (mirrors server-side PROVIDER_META)
     const PROVIDERS = {
       google:    { label: 'Google',    handleLabel: 'Their Gmail address',             handlePlaceholder: 'name@gmail.com' },
-      linkedin:  { label: 'LinkedIn',  handleLabel: 'Their LinkedIn handle or email',  handlePlaceholder: 'jane-doe or name@email.com' },
+      linkedin:  { label: 'LinkedIn',  handleLabel: 'Their LinkedIn profile URL or email',  handlePlaceholder: 'linkedin.com/in/jane-doe or name@email.com' },
       github:    { label: 'GitHub',    handleLabel: 'Their GitHub username or email',  handlePlaceholder: 'octocat or name@email.com' },
       microsoft: { label: 'Microsoft', handleLabel: 'Their Microsoft / Outlook email', handlePlaceholder: 'name@outlook.com' },
       facebook:  { label: 'Facebook',  handleLabel: 'Their Facebook email',            handlePlaceholder: 'name@email.com' },
@@ -155,6 +174,8 @@
     let selectedProvider = 'google';
     let selectedWords = [];
     let sessionCreatedAt = null;
+    let anchors = []; // { provider, handle }
+    let lastMatchedAnchors = null;
 
     // Set the site URL in the instructions dynamically
     const siteUrlEl = document.getElementById('site-url');
@@ -165,6 +186,11 @@
     // Provider tabs
     document.querySelectorAll('.provider-tab').forEach(tab => {
       tab.addEventListener('click', () => {
+        if (tab.classList.contains('used')) return;
+        if (tab.dataset.comingSoon) {
+          alert('Facebook login is coming soon!');
+          return;
+        }
         document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         selectedProvider = tab.dataset.provider;
@@ -174,19 +200,134 @@
       });
     });
 
-    // Create session
-    document.getElementById('btn-create-session').addEventListener('click', async () => {
-      const handle = document.getElementById('presenter-handle').value.trim();
-      if (!handle) {
+    // Normalize handle input — extract slug from LinkedIn URLs, etc.
+    function normalizeHandle(handle, provider) {
+      handle = handle.trim();
+      if (provider === 'linkedin') {
+        // Match linkedin.com/in/some-slug (with or without protocol, www, trailing slash)
+        const match = handle.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([^\/?#]+)/i);
+        if (match) return match[1];
+      }
+      return handle;
+    }
+
+    // ── Anchor management ──
+
+    document.getElementById('btn-add-anchor').addEventListener('click', addAnchor);
+
+    // Allow Enter key in handle input to add anchor
+    document.getElementById('presenter-handle').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addAnchor();
+      }
+    });
+
+    function addAnchor() {
+      const raw = document.getElementById('presenter-handle').value.trim();
+      if (!raw) {
         alert('Please enter their identifier.');
         return;
       }
+      const handle = normalizeHandle(raw, selectedProvider);
+
+      // Check if provider already added
+      if (anchors.some(a => a.provider === selectedProvider)) {
+        alert(`${PROVIDERS[selectedProvider].label} has already been added.`);
+        return;
+      }
+
+      anchors.push({ provider: selectedProvider, handle });
+      document.getElementById('presenter-handle').value = '';
+      renderAnchors();
+      selectNextAvailableProvider();
+    }
+
+    function removeAnchor(index) {
+      anchors.splice(index, 1);
+      renderAnchors();
+      selectNextAvailableProvider();
+    }
+
+    function renderAnchors() {
+      const list = document.getElementById('anchor-list');
+      const items = document.getElementById('anchor-items');
+      const startBtn = document.getElementById('btn-create-session');
+
+      items.innerHTML = '';
+
+      if (anchors.length === 0) {
+        list.style.display = 'none';
+        startBtn.style.display = 'none';
+        // Re-enable all provider tabs
+        document.querySelectorAll('.provider-tab').forEach(t => {
+          t.classList.remove('used');
+          t.disabled = false;
+        });
+        return;
+      }
+
+      list.style.display = 'block';
+      startBtn.style.display = '';
+      startBtn.textContent = anchors.length === 1
+        ? 'Start Verification Session'
+        : `Start Verification Session (${anchors.length} anchors)`;
+
+      anchors.forEach((anchor, i) => {
+        const item = document.createElement('div');
+        item.className = 'anchor-item';
+        item.innerHTML = `
+          <div class="anchor-item-info">
+            <span class="anchor-item-provider">${PROVIDERS[anchor.provider].label}</span>
+            <span class="anchor-item-handle">${anchor.handle}</span>
+          </div>
+          <button class="anchor-item-remove" data-index="${i}">&times;</button>
+        `;
+        items.appendChild(item);
+      });
+
+      // Attach remove handlers
+      items.querySelectorAll('.anchor-item-remove').forEach(btn => {
+        btn.addEventListener('click', () => removeAnchor(parseInt(btn.dataset.index)));
+      });
+
+      // Disable provider tabs that are already used
+      const usedProviders = new Set(anchors.map(a => a.provider));
+      document.querySelectorAll('.provider-tab').forEach(tab => {
+        const used = usedProviders.has(tab.dataset.provider);
+        tab.classList.toggle('used', used);
+        tab.disabled = used;
+      });
+    }
+
+    function selectNextAvailableProvider() {
+      const usedProviders = new Set(anchors.map(a => a.provider));
+      const available = Object.keys(PROVIDERS).find(p => !usedProviders.has(p));
+      if (available) {
+        selectedProvider = available;
+        document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+        const tab = document.querySelector(`.provider-tab[data-provider="${available}"]`);
+        if (tab) {
+          tab.classList.add('active');
+          const meta = PROVIDERS[available];
+          document.getElementById('handle-label').textContent = meta.handleLabel;
+          document.getElementById('presenter-handle').placeholder = meta.handlePlaceholder;
+        }
+      }
+    }
+
+    // ── Create session ──
+
+    document.getElementById('btn-create-session').addEventListener('click', createSession);
+
+    async function createSession() {
+      if (anchors.length === 0) return;
 
       try {
         const res = await fetch('/api/simple/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ presenterHandle: handle, provider: selectedProvider }),
+          body: JSON.stringify({ anchors }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
@@ -198,7 +339,9 @@
       } catch (err) {
         showError(err.message);
       }
-    });
+    }
+
+    // ── Word selection ──
 
     function renderWordGrid(words) {
       const grid = document.getElementById('word-grid');
@@ -220,21 +363,21 @@
         chip.classList.remove('selected');
         selectedWords = selectedWords.filter(w => w !== word);
       } else {
-        if (selectedWords.length >= 5) return;
+        if (selectedWords.length >= 3) return;
         chip.classList.add('selected');
         selectedWords.push(word);
       }
       updateWordCount();
       document.querySelectorAll('.word-chip').forEach(c => {
         if (!c.classList.contains('selected')) {
-          c.classList.toggle('disabled', selectedWords.length >= 5);
+          c.classList.toggle('disabled', selectedWords.length >= 3);
         }
       });
     }
 
     function updateWordCount() {
       document.getElementById('selected-count').textContent = selectedWords.length;
-      document.getElementById('btn-confirm-words').disabled = selectedWords.length !== 5;
+      document.getElementById('btn-confirm-words').disabled = selectedWords.length !== 3;
     }
 
     // Confirm words
@@ -248,17 +391,70 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        document.getElementById('waiting-provider').textContent =
-          PROVIDERS[selectedProvider].label;
-        showScreen('screen-waiting');
-        startTimer();
-        pollForMatch();
+        showWaitingScreen();
       } catch (err) {
         showError(err.message);
       }
     });
 
-    // Timer
+    // ── Waiting screen ──
+
+    function showWaitingScreen() {
+      // Build provider list text for the callout
+      const providerNames = anchors.map(a => PROVIDERS[a.provider].label);
+      let providerText;
+      if (providerNames.length === 1) {
+        providerText = providerNames[0];
+      } else {
+        providerText = providerNames.slice(0, -1).join(', ') + ' and ' + providerNames[providerNames.length - 1];
+      }
+      document.getElementById('waiting-providers').textContent = providerText;
+
+      // Update callout grammar: "account" vs "accounts"
+      const callout = document.querySelector('#screen-waiting .callout strong');
+      if (anchors.length === 1) {
+        callout.innerHTML = `"Go to <span id="site-url">${window.location.host}</span> and click 'I was asked to verify', then sign in with your <span id="waiting-providers">${providerText}</span> account."`;
+      } else {
+        callout.innerHTML = `"Go to <span id="site-url">${window.location.host}</span> and click 'I was asked to verify', then sign in with your <span id="waiting-providers">${providerText}</span> accounts."`;
+      }
+
+      // Show progress tracker for multi-anchor
+      const progressEl = document.getElementById('auth-progress');
+      if (anchors.length > 1) {
+        progressEl.style.display = '';
+        progressEl.innerHTML = '';
+        anchors.forEach(anchor => {
+          const item = document.createElement('div');
+          item.className = 'auth-progress-item pending';
+          item.id = `progress-${anchor.provider}`;
+          item.innerHTML = `
+            <span class="auth-progress-icon">&#9711;</span>
+            <span>${PROVIDERS[anchor.provider].label}</span>
+            <span class="auth-progress-status" style="margin-left:auto; color:var(--text-muted);">Waiting...</span>
+          `;
+          progressEl.appendChild(item);
+        });
+      } else {
+        progressEl.style.display = 'none';
+      }
+
+      // Show selected words on waiting screen
+      const waitingWords = document.getElementById('waiting-words');
+      waitingWords.innerHTML = '';
+      selectedWords.forEach(word => {
+        const badge = document.createElement('div');
+        badge.className = 'word-badge';
+        badge.textContent = word;
+        waitingWords.appendChild(badge);
+      });
+
+      showScreen('screen-waiting');
+      startTimer();
+      pollForMatch();
+    }
+
+    // ── Timer ──
+
     function startTimer() {
       const timerEl = document.getElementById('timer');
       const update = () => {
@@ -276,43 +472,165 @@
       update();
     }
 
-    // Poll for presenter match via SSE
+    // ── Poll for presenter match via SSE ──
+
     function pollForMatch() {
       const evtSource = new EventSource(`/api/simple/session/${sessionId}/poll`);
 
       evtSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.state === 'MATCHED') {
+        if (data.state === 'PARTIAL') {
+          updateAuthProgress(data);
+        } else if (data.state === 'MATCHED') {
           evtSource.close();
-          showMatchedScreen(data.profile);
+          showMatchedScreen(data.anchors);
         }
       };
 
       evtSource.onerror = () => {
         evtSource.close();
+        // Fallback: poll the result endpoint
         setTimeout(async () => {
           try {
             const res = await fetch(`/api/simple/session/${sessionId}/result`);
             const data = await res.json();
             if (data.state === 'MATCHED') {
-              showMatchedScreen(data.profile);
+              showMatchedScreen(data.anchors);
+            } else if (data.state === 'PARTIAL') {
+              // Reconnect SSE
+              pollForMatch();
             }
           } catch (e) { /* ignore */ }
         }, 2000);
       };
     }
 
-    function showMatchedScreen(profile) {
-      if (profile.picture) {
-        document.getElementById('profile-pic').src = profile.picture;
-        document.getElementById('profile-pic').style.display = 'block';
-      } else {
-        document.getElementById('profile-pic').style.display = 'none';
+    function updateAuthProgress(data) {
+      if (data.lastProvider) {
+        const item = document.getElementById(`progress-${data.lastProvider}`);
+        if (item) {
+          item.className = 'auth-progress-item completed';
+          item.innerHTML = `
+            <span class="auth-progress-icon">&#10003;</span>
+            <span>${PROVIDERS[data.lastProvider].label}</span>
+            <span class="auth-progress-status" style="margin-left:auto; color:var(--success-color);">Authenticated</span>
+          `;
+        }
       }
-      document.getElementById('profile-name').textContent = profile.name || 'Authenticated User';
-      document.getElementById('profile-provider').textContent =
-        `via ${PROVIDERS[selectedProvider].label}`;
+    }
 
+    // ── Matched screen ──
+
+    // Profile field configuration (shared for all profile cards)
+    const PROFILE_FIELDS = [
+      { key: 'email', label: 'Email', format: (v, p) =>
+        p.email_verified ? v + ' \u2713' : v
+      },
+      { key: 'username', label: 'Username', format: v => '@' + v },
+      { key: 'company', label: 'Company' },
+      { key: 'jobTitle', label: 'Title' },
+      { key: 'department', label: 'Department' },
+      { key: 'location', label: 'Location' },
+      { key: 'bio', label: 'Bio', wrap: true },
+      { key: 'profileUrl', label: 'Profile', isLink: true },
+      { key: 'website', label: 'Website', isLink: true },
+      { key: 'twitterUsername', label: 'X / Twitter', format: v => '@' + v },
+      { key: 'accountCreated', label: 'Member since', format: v => {
+        const d = new Date(v);
+        return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+      }},
+      { key: 'followers', label: 'Followers', format: v => v.toLocaleString() },
+      { key: 'publicRepos', label: 'Public repos', format: v => v.toLocaleString() },
+    ];
+
+    function showMatchedScreen(anchorsData) {
+      lastMatchedAnchors = anchorsData;
+
+      const profilesContainer = document.getElementById('matched-profiles');
+      profilesContainer.innerHTML = '';
+
+      anchorsData.forEach(anchor => {
+        const profile = anchor.profile;
+        const card = document.createElement('div');
+        card.className = 'profile-card';
+
+        // Header: picture + name + provider
+        const header = document.createElement('div');
+        header.className = 'profile-card-header';
+
+        if (profile.picture) {
+          const pic = document.createElement('img');
+          pic.className = 'profile-pic';
+          pic.referrerPolicy = 'no-referrer';
+          pic.alt = '';
+          pic.onerror = () => { pic.style.display = 'none'; };
+          pic.src = profile.picture;
+          header.appendChild(pic);
+        }
+
+        const identity = document.createElement('div');
+        identity.className = 'profile-card-identity';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'profile-name';
+        nameEl.textContent = profile.name || 'Authenticated User';
+
+        const providerEl = document.createElement('div');
+        providerEl.className = 'profile-provider';
+        providerEl.textContent = `via ${PROVIDERS[anchor.provider].label}`;
+
+        identity.appendChild(nameEl);
+        identity.appendChild(providerEl);
+        header.appendChild(identity);
+        card.appendChild(header);
+
+        // Detail rows
+        const details = document.createElement('div');
+        details.className = 'profile-card-details';
+        let hasDetails = false;
+
+        PROFILE_FIELDS.forEach(({ key, label, format, isLink, wrap }) => {
+          const value = profile[key];
+          if (value == null || value === '') return;
+
+          hasDetails = true;
+          const row = document.createElement('div');
+          row.className = 'profile-detail-row' + (wrap ? ' wrap' : '');
+
+          const labelEl = document.createElement('span');
+          labelEl.className = 'profile-detail-label';
+          labelEl.textContent = label;
+
+          const valueEl = document.createElement('span');
+          valueEl.className = 'profile-detail-value';
+
+          const displayValue = format ? format(value, profile) : String(value);
+
+          if (isLink) {
+            const a = document.createElement('a');
+            a.href = value.startsWith('http') ? value : 'https://' + value;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = displayValue.replace(/^https?:\/\/(www\.)?/, '');
+            a.className = 'profile-detail-link';
+            valueEl.appendChild(a);
+          } else {
+            valueEl.textContent = displayValue;
+          }
+
+          row.appendChild(labelEl);
+          row.appendChild(valueEl);
+          details.appendChild(row);
+        });
+
+        if (hasDetails) {
+          card.appendChild(details);
+        }
+
+        profilesContainer.appendChild(card);
+      });
+
+      // Words
       const wordsContainer = document.getElementById('verifier-words');
       wordsContainer.innerHTML = '';
       selectedWords.forEach(word => {
@@ -325,16 +643,71 @@
       showScreen('screen-matched');
     }
 
-    document.getElementById('btn-verified').addEventListener('click', () => {
-      const name = document.getElementById('profile-name').textContent;
-      document.getElementById('confirmed-text').textContent =
-        `You verified that ${name} authenticated as themselves, right now, using their ${PROVIDERS[selectedProvider].label} identity.`;
+    // ── Confirmed ──
+
+    document.getElementById('btn-verified').addEventListener('click', async () => {
+      if (!lastMatchedAnchors) return;
+
+      // Notify the server (and the presenter) that verification is confirmed
+      try {
+        await fetch(`/api/simple/session/${sessionId}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        // Non-blocking — show confirmed screen even if the notify fails
+        console.error('Failed to confirm session:', e);
+      }
+
+      const providerLabels = lastMatchedAnchors.map(a => PROVIDERS[a.provider].label);
+      let providerText;
+      if (providerLabels.length === 1) {
+        providerText = `their ${providerLabels[0]} identity`;
+      } else {
+        providerText = `their ${providerLabels.slice(0, -1).join(', ')} and ${providerLabels[providerLabels.length - 1]} identities`;
+      }
+
+      const name = lastMatchedAnchors[0]?.profile?.name || 'the presenter';
+      let text = `You verified that ${name} authenticated as themselves, right now, using ${providerText}.`;
+
+      // List confirmed emails
+      const emails = lastMatchedAnchors
+        .map(a => a.profile?.email)
+        .filter(Boolean);
+      if (emails.length) {
+        text += ` Confirmed email${emails.length > 1 ? 's' : ''}: ${emails.join(', ')}`;
+      }
+
+      document.getElementById('confirmed-text').textContent = text;
       showScreen('screen-confirmed');
     });
 
-    document.getElementById('btn-no-match').addEventListener('click', () => {
-      showError('The words did not match. This could indicate an impersonation attempt. Do not trust this person\'s identity.');
+    // Vero app modal
+    document.getElementById('btn-add-contacts').addEventListener('click', () => {
+      document.getElementById('modal-overlay').style.display = 'flex';
     });
+    document.getElementById('btn-modal-close').addEventListener('click', () => {
+      document.getElementById('modal-overlay').style.display = 'none';
+    });
+    document.getElementById('modal-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+    });
+
+    document.getElementById('btn-no-match').addEventListener('click', async () => {
+      // Notify the server (and the presenter) that words didn't match
+      try {
+        await fetch(`/api/simple/session/${sessionId}/reject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        console.error('Failed to reject session:', e);
+      }
+
+      showError('This person was not able to prove control over your chosen trust anchors. This may be an impersonation attempt \u2014 proceed with caution.');
+    });
+
+    // ── Helpers ──
 
     function showScreen(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));

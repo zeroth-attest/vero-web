@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 // ──────────────────────────────────────────────
 const PROVIDER_META = {
   google:    { label: 'Google',    icon: 'google',    handleLabel: 'Gmail address',                handlePlaceholder: 'name@gmail.com' },
-  linkedin:  { label: 'LinkedIn',  icon: 'linkedin',  handleLabel: 'LinkedIn handle or email',     handlePlaceholder: 'jane-doe or name@email.com' },
+  linkedin:  { label: 'LinkedIn',  icon: 'linkedin',  handleLabel: 'LinkedIn profile URL or email', handlePlaceholder: 'linkedin.com/in/jane-doe or name@email.com' },
   github:    { label: 'GitHub',    icon: 'github',    handleLabel: 'GitHub username or email',     handlePlaceholder: 'octocat or name@email.com' },
   microsoft: { label: 'Microsoft', icon: 'microsoft', handleLabel: 'Microsoft / Outlook email',    handlePlaceholder: 'name@outlook.com' },
   facebook:  { label: 'Facebook',  icon: 'facebook',  handleLabel: 'Facebook email',               handlePlaceholder: 'name@email.com' },
@@ -100,9 +100,17 @@ function generateAppleClientSecret() {
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
+// In production, always route OAuth callbacks through the main domain
+// so each provider only needs one registered callback URL.
+// The state parameter carries the original subdomain for post-auth redirect.
+const PRODUCTION_CALLBACK_HOST = 'https://vero.technology';
+
 function getCallbackUrl(provider, baseUrl) {
-  // baseUrl can be passed from the request, or fall back to env / default
   baseUrl = baseUrl || process.env.BASE_URL || 'http://localhost:8080';
+  // In production, always use the main domain for callbacks
+  if (process.env.NODE_ENV === 'production') {
+    return `${PRODUCTION_CALLBACK_HOST}/api/simple/auth/${provider}/callback`;
+  }
   return `${baseUrl}/api/simple/auth/${provider}/callback`;
 }
 
@@ -134,6 +142,14 @@ function getAuthorizationUrl(provider, sessionId, req) {
     scope: config.scopes,
     state,
   });
+
+  // Google & Microsoft: always show account picker so user can choose a different account
+  if (provider === 'google') {
+    params.set('prompt', 'select_account');
+  }
+  if (provider === 'microsoft') {
+    params.set('prompt', 'select_account');
+  }
 
   // Apple-specific: use form_post so callback receives a POST
   if (provider === 'apple') {
@@ -204,6 +220,7 @@ async function extractStandardProfile(provider, tokens) {
     name: profile.name,
     email: profile.email,
     picture: profile.picture,
+    email_verified: profile.email_verified || null,
     provider,
   };
 }
@@ -221,28 +238,39 @@ async function extractGitHubProfile(tokens) {
 
   // Fetch primary email (may be private)
   let email = user.email;
-  if (!email) {
-    try {
-      const emailRes = await fetch('https://api.github.com/user/emails', {
-        headers: {
-          Authorization: `Bearer ${tokens.access_token}`,
-          Accept: 'application/vnd.github+json',
-        },
-      });
-      if (emailRes.ok) {
-        const emails = await emailRes.json();
-        const primary = emails.find(e => e.primary && e.verified);
-        email = primary ? primary.email : (emails[0] && emails[0].email);
-      }
-    } catch { /* email stays null */ }
-  }
+  let email_verified = null;
+  try {
+    const emailRes = await fetch('https://api.github.com/user/emails', {
+      headers: {
+        Authorization: `Bearer ${tokens.access_token}`,
+        Accept: 'application/vnd.github+json',
+      },
+    });
+    if (emailRes.ok) {
+      const emails = await emailRes.json();
+      const primary = emails.find(e => e.primary);
+      if (!email && primary) email = primary.email;
+      if (!email && emails[0]) email = emails[0].email;
+      if (primary) email_verified = !!primary.verified;
+    }
+  } catch { /* email stays as-is */ }
 
   return {
     sub: String(user.id),
     name: user.name || user.login,
     email,
     picture: user.avatar_url,
+    email_verified,
     username: user.login,
+    bio: user.bio || null,
+    company: user.company || null,
+    location: user.location || null,
+    profileUrl: user.html_url || null,
+    accountCreated: user.created_at || null,
+    publicRepos: user.public_repos != null ? user.public_repos : null,
+    followers: user.followers != null ? user.followers : null,
+    website: user.blog || null,
+    twitterUsername: user.twitter_username || null,
     provider: 'github',
   };
 }
@@ -273,13 +301,17 @@ async function extractMicrosoftProfile(tokens) {
     name: profile.displayName,
     email: profile.mail || profile.userPrincipalName,
     picture,
+    email_verified: true, // implicit for OAuth-authenticated Microsoft accounts
+    jobTitle: profile.jobTitle || null,
+    department: profile.department || null,
+    location: profile.officeLocation || null,
     provider: 'microsoft',
   };
 }
 
 async function extractFacebookProfile(tokens) {
   const profileRes = await fetch(
-    `https://graph.facebook.com/v19.0/me?fields=id,name,email,picture.width(200).height(200)&access_token=${tokens.access_token}`
+    `https://graph.facebook.com/v19.0/me?fields=id,name,email,picture.width(200).height(200),link&access_token=${tokens.access_token}`
   );
   if (!profileRes.ok) throw new Error('Failed to fetch Facebook profile');
   const profile = await profileRes.json();
@@ -289,6 +321,7 @@ async function extractFacebookProfile(tokens) {
     name: profile.name,
     email: profile.email,
     picture: profile.picture && profile.picture.data ? profile.picture.data.url : null,
+    profileUrl: profile.link || null,
     provider: 'facebook',
   };
 }
@@ -314,6 +347,7 @@ function extractAppleProfile(tokens, extras) {
     name: name || 'Apple User',
     email: decoded.email,
     picture: null, // Apple never provides a profile photo
+    email_verified: decoded.email_verified || null,
     provider: 'apple',
   };
 }

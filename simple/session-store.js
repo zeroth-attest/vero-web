@@ -15,18 +15,21 @@ setInterval(() => {
   }
 }, CLEANUP_INTERVAL_MS);
 
-function createSession({ presenterHandle, provider }) {
+function createSession({ anchors }) {
   const id = crypto.randomBytes(16).toString('hex');
   const session = {
     id,
-    presenterHandle: presenterHandle.toLowerCase().trim(),
-    provider, // 'google' or 'linkedin'
-    state: 'PENDING',
+    anchors: anchors.map(a => ({
+      provider: a.provider,
+      handle: a.handle.toLowerCase().trim(),
+      profile: null,
+    })),
+    state: 'PENDING', // PENDING → PARTIAL → MATCHED → CONFIRMED
     candidateWords: [],
     selectedWords: [],
-    presenterProfile: null,
     createdAt: Date.now(),
-    pollListeners: [], // SSE response objects waiting for updates
+    pollListeners: [], // SSE response objects waiting for updates (verifier side)
+    presenterPollListeners: [], // SSE response objects for presenter waiting for confirmation
   };
   sessions.set(id, session);
   return session;
@@ -56,20 +59,50 @@ function setSelectedWords(id, words) {
   return session;
 }
 
-function matchPresenter(id, profile) {
+function matchAnchor(id, provider, profile) {
   const session = getSession(id);
-  if (!session || session.state !== 'PENDING') return null;
-  session.presenterProfile = profile;
-  session.state = 'MATCHED';
+  if (!session) return null;
 
-  // Notify all SSE listeners
-  for (const listener of session.pollListeners) {
-    try {
-      listener.write(`data: ${JSON.stringify({ state: 'MATCHED', profile: { name: profile.name, picture: profile.picture } })}\n\n`);
-      listener.end();
-    } catch (e) { /* client may have disconnected */ }
+  // Find the unmatched anchor for this provider
+  const anchor = session.anchors.find(a => a.provider === provider && !a.profile);
+  if (!anchor) return null;
+
+  anchor.profile = profile;
+
+  const completedCount = session.anchors.filter(a => a.profile !== null).length;
+  const totalCount = session.anchors.length;
+  const allMatched = completedCount === totalCount;
+
+  if (allMatched) {
+    session.state = 'MATCHED';
+    // Build anchor data for SSE (exclude sub from each profile for privacy)
+    const anchorData = session.anchors.map(a => {
+      const { sub, ...clientProfile } = a.profile;
+      return { provider: a.provider, profile: clientProfile };
+    });
+    for (const listener of session.pollListeners) {
+      try {
+        listener.write(`data: ${JSON.stringify({ state: 'MATCHED', anchors: anchorData })}\n\n`);
+        listener.end();
+      } catch (e) { /* client may have disconnected */ }
+    }
+    session.pollListeners = [];
+  } else {
+    session.state = 'PARTIAL';
+    // Send progress update (keep SSE connection open)
+    const { sub, ...lastProfile } = profile;
+    for (const listener of session.pollListeners) {
+      try {
+        listener.write(`data: ${JSON.stringify({
+          state: 'PARTIAL',
+          completed: completedCount,
+          total: totalCount,
+          lastProvider: provider,
+          lastProfile,
+        })}\n\n`);
+      } catch (e) { /* client may have disconnected */ }
+    }
   }
-  session.pollListeners = [];
 
   return session;
 }
@@ -88,18 +121,68 @@ function removePollListener(id, res) {
   session.pollListeners = session.pollListeners.filter(l => l !== res);
 }
 
-// Find a pending session by presenter handle and provider
+function confirmSession(id) {
+  const session = getSession(id);
+  if (!session) return null;
+  if (session.state !== 'MATCHED') return null;
+
+  session.state = 'CONFIRMED';
+
+  // Notify all presenter poll listeners that verification is confirmed
+  for (const listener of session.presenterPollListeners) {
+    try {
+      listener.write(`data: ${JSON.stringify({ state: 'CONFIRMED' })}\n\n`);
+      listener.end();
+    } catch (e) { /* client may have disconnected */ }
+  }
+  session.presenterPollListeners = [];
+
+  return session;
+}
+
+function rejectSession(id) {
+  const session = getSession(id);
+  if (!session) return null;
+  if (session.state !== 'MATCHED') return null;
+
+  session.state = 'REJECTED';
+
+  // Notify all presenter poll listeners that verification was rejected
+  for (const listener of session.presenterPollListeners) {
+    try {
+      listener.write(`data: ${JSON.stringify({ state: 'REJECTED' })}\n\n`);
+      listener.end();
+    } catch (e) { /* client may have disconnected */ }
+  }
+  session.presenterPollListeners = [];
+
+  return session;
+}
+
+function addPresenterPollListener(id, res) {
+  const session = getSession(id);
+  if (!session) return false;
+  if (session.state === 'CONFIRMED') return false; // Already confirmed
+  session.presenterPollListeners.push(res);
+  return true;
+}
+
+function removePresenterPollListener(id, res) {
+  const session = getSession(id);
+  if (!session) return;
+  session.presenterPollListeners = session.presenterPollListeners.filter(l => l !== res);
+}
+
+// Find a pending or partial session by presenter handle and provider
 function findSessionByPresenter(handle, provider) {
   const normalized = handle.toLowerCase().trim();
   for (const [, session] of sessions) {
-    if (
-      session.state === 'PENDING' &&
-      session.provider === provider &&
-      session.presenterHandle === normalized &&
-      Date.now() - session.createdAt <= SESSION_TTL_MS
-    ) {
-      return session;
-    }
+    if (Date.now() - session.createdAt > SESSION_TTL_MS) continue;
+    if (session.state === 'MATCHED') continue; // Already fully matched
+    const anchor = session.anchors.find(a =>
+      a.provider === provider && a.handle === normalized
+    );
+    if (anchor) return session;
   }
   return null;
 }
@@ -109,8 +192,12 @@ module.exports = {
   getSession,
   setCandidateWords,
   setSelectedWords,
-  matchPresenter,
+  matchAnchor,
+  confirmSession,
+  rejectSession,
   addPollListener,
   removePollListener,
+  addPresenterPollListener,
+  removePresenterPollListener,
   findSessionByPresenter,
 };

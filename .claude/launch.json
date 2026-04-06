@@ -3,9 +3,15 @@
   "configurations": [
     {
       "name": "vero-web",
-      "runtimeExecutable": "node",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
       "runtimeArgs": ["server.js"],
       "port": 8080
+    },
+    {
+      "name": "generative-logo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "/Users/jamescbury/Code/github/generative_logo"],
+      "port": 8090
     }
   ]
 }

@@ -17,7 +17,16 @@ app.set('trust proxy', true);
 app.use(express.json());
 
 // ── Shared assets (available on all domains) ──
-app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
+// Website assets take priority on the main domain (they live under public/website/assets/)
+const websiteAssets = express.static(path.join(__dirname, 'public', 'website', 'assets'));
+const sharedAssets = express.static(path.join(__dirname, 'public', 'assets'));
+app.use('/assets', (req, res, next) => {
+  if (!isVoiceHost(req.hostname) && !isVideoHost(req.hostname)) {
+    // Try website assets first, then fall back to shared assets
+    return websiteAssets(req, res, () => sharedAssets(req, res, next));
+  }
+  sharedAssets(req, res, next);
+});
 
 // ── API routes (available on all domains) ──
 app.use('/api/simple', simpleRoutes);
@@ -77,9 +86,9 @@ app.get('/voice/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'simple', 'public', 'index.html'));
 });
 
-// Alias /video to /blink
+// Serve Vero Video landing page at /video
 app.get('/video', (req, res) => {
-  res.redirect('/blink');
+  res.sendFile(path.join(__dirname, 'public', 'blink', 'landing.html'));
 });
 
 // The old configure page is also available at /configure
@@ -87,7 +96,16 @@ app.get('/configure', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'configure.html'));
 });
 
-// Serve existing static site (blink demo + assets) from root on main domain
+// Serve vero-website for main domain root (before public/ so website index.html wins)
+const websiteStatic = express.static(path.join(__dirname, 'public', 'website'));
+app.use((req, res, next) => {
+  if (!isVoiceHost(req.hostname) && !isVideoHost(req.hostname)) {
+    return websiteStatic(req, res, next);
+  }
+  next();
+});
+
+// Serve existing static site (blink demo + assets) — shared assets, /blink, etc.
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Catch-all fallbacks (hostname-aware) ──
@@ -98,9 +116,8 @@ app.get('*', (req, res) => {
   if (isVideoHost(req.hostname)) {
     return res.sendFile(path.join(__dirname, 'public', 'blink', 'index.html'));
   }
-  // Main domain / localhost: existing site (configure page)
-  // When ready to cutover, change this to landing.html
-  res.sendFile(path.join(__dirname, 'public', 'configure.html'));
+  // Main domain / localhost: serve vero-website (SPA fallback)
+  res.sendFile(path.join(__dirname, 'public', 'website', 'index.html'));
 });
 
 app.listen(PORT, () => {
