@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 136.89626 135.4292"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="zeroth-vero-logos-master.svg"
+   width="136.89626"
+   height="135.4292"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="false"
+     inkscape:deskcolor="#ffffff"
+     inkscape:zoom="0.12850543"
+     inkscape:cx="-451.3428"
+     inkscape:cy="2879.2558"
+     inkscape:window-width="1440"
+     inkscape:window-height="789"
+     inkscape:window-x="248"
+     inkscape:window-y="105"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg1">
+    <inkscape:page
+       x="0"
+       y="0"
+       width="136.89626"
+       height="135.4292"
+       id="page2"
+       margin="0"
+       bleed="0" />
+  </sodipodi:namedview>
+  <path
+     id="path88"
+     style="fill:#3399ff;fill-opacity:1;stroke:none;stroke-width:1;stroke-opacity:1"
+     d="M 19.020003,-3.8508384e-5 C 9.9624023,0.0809615 0.05350236,9.8359615 2.3601656e-6,21.097262 L 0.22690236,117.26206 C 2.3601656e-6,128.69366 10.621103,135.44386 20.244403,135.37916 l 96.017697,0.05 c 10.8006,0.015 20.6802,-9.6127 20.621,-20.2094 l 0.013,-94.436698 C 136.9401,8.5123615 126.7288,0.1032615 117.8986,6.1491616e-5 H 68.459603 Z M 118.1499,16.124762 c -35.854797,29.4266 -100.125397,82.4427 -101.785697,83.8205 v -78.5887 c 0.011,-2.507 1.6135,-4.9172 4.6384,-5.0125 z m 2.798,18.6035 0.01,78.595998 c 0.026,3.4537 -2.0384,5.9668 -5.5113,5.9802 l -97.119897,0.2219 C 23.818003,115.31346 119.5679,35.878162 120.9502,34.728262 Z"
+     inkscape:label="zero" />
+</svg>

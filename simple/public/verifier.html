@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vero Voice - Verify Someone</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="/assets/zeroth-0-favicon.png" type="image/png">
+</head>
+<body>
+  <header class="sticky-header" id="sticky-header">
+    <a href="index.html"><img src="/assets/vero-simple.svg" alt="Vero" class="sticky-logo"></a>
+  </header>
+
+  <div class="app">
+    <div class="header">
+      <a href="index.html"><img src="/assets/vero-simple.svg" alt="Vero" id="hero-logo"></a>
+
+    </div>
+
+    <!-- Screen 1: Enter presenter info -->
+    <div id="screen-setup" class="screen active">
+      <div class="card">
+        <h2>Which accounts should they verify</h2>
+        <p>Select the accounts you want them to prove access to and enter their email, handle, or profile name. You can require multiple providers for stronger verification.</p>
+
+        <div class="provider-grid" id="provider-grid">
+          <button class="provider-tab active" data-provider="google">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google
+          </button>
+          <button class="provider-tab" data-provider="linkedin">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#0077B5" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </button>
+          <button class="provider-tab" data-provider="github">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#fff" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            GitHub
+          </button>
+          <button class="provider-tab" data-provider="microsoft">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><rect fill="#F25022" x="1" y="1" width="10" height="10"/><rect fill="#7FBA00" x="13" y="1" width="10" height="10"/><rect fill="#00A4EF" x="1" y="13" width="10" height="10"/><rect fill="#FFB900" x="13" y="13" width="10" height="10"/></svg>
+            Microsoft
+          </button>
+          <button class="provider-tab" data-provider="youtube">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#FF0000" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            YouTube
+          </button>
+          <button class="provider-tab" data-provider="apple">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#fff" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            Apple
+          </button>
+          <button class="provider-tab" data-provider="discord">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#5865F2" d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+            Discord
+          </button>
+          <button class="provider-tab provider-coming-soon" data-provider="tiktok" data-coming-soon="true">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#fff" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+            TikTok
+          </button>
+          <button class="provider-tab provider-coming-soon" data-provider="instagram" data-coming-soon="true">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FD5"/><stop offset="50%" stop-color="#FF543E"/><stop offset="100%" stop-color="#C837AB"/></linearGradient></defs><path fill="url(#ig)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+            Instagram
+          </button>
+          <button class="provider-tab provider-coming-soon" data-provider="facebook" data-coming-soon="true">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Facebook
+          </button>
+          <button class="provider-tab provider-coming-soon" data-provider="telegram" data-coming-soon="true">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#26A5E4" d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            Telegram
+          </button>
+        </div>
+        <div class="provider-grid provider-grid-messaging">
+          <button class="provider-tab" data-provider="sms">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#22c55e" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
+            SMS
+          </button>
+          <button class="provider-tab" data-provider="email">
+            <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#3399FF" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            Email
+          </button>
+        </div>
+        <p class="provider-contact">Want to see your app here? <a href="mailto:connect@vero.technology">Contact us</a></p>
+
+        <div id="security-warning" class="security-warning" style="display:none;">
+          <div class="security-warning-icon">&#9888;</div>
+          <div class="security-warning-text">
+            <strong>Lower Security</strong>
+            <p>SMS and email can be intercepted or spoofed - selecting these options alone will send the passphrase directly to them. For stronger verification, combine with an OAuth provider like Google or LinkedIn.</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label id="handle-label">Enter their Gmail address</label>
+          <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
+        </div>
+
+        <button class="btn btn-primary" id="btn-add-anchor">Add Account</button>
+
+        <div id="anchor-list" class="anchor-list" style="display:none;">
+          <label class="anchor-list-label">Accounts to verify:</label>
+          <div id="anchor-items"></div>
+        </div>
+
+        <button class="btn btn-success" id="btn-create-session" style="display:none;">Start Verification</button>
+      </div>
+    </div>
+
+    <!-- Screen 2: Select words -->
+    <div id="screen-words" class="screen">
+      <div class="card">
+        <h2>Choose your passphrase</h2>
+        <p>Select 3 words from the list below. You'll ask them to read these words out loud to confirm it's really them.</p>
+
+        <div class="word-grid" id="word-grid"></div>
+        <div class="word-count"><span id="selected-count">0</span> of 3 selected</div>
+
+        <button class="btn btn-primary" id="btn-confirm-words" disabled>Confirm Words</button>
+      </div>
+    </div>
+
+    <!-- Screen 3: Waiting for presenter -->
+    <div id="screen-waiting" class="screen">
+      <div class="card">
+        <div class="waiting">
+          <div class="spinner"></div>
+          <h3>Waiting for authentication</h3>
+          <p>Stay on this screen while they complete verification.</p>
+        </div>
+
+        <!-- Share options for OAuth sessions -->
+        <div class="share-options" id="share-options">
+          <div class="share-link-row" id="share-link-row">
+            <span>Send this link to the person you are verifying</span>
+            <button id="btn-copy-link" class="btn-copy-link" title="Copy link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div class="share-or">or ask them to go to <strong>voice.vero.technology</strong> and click "Get Verified"</div>
+        </div>
+        <!-- Callout for SMS/email-only sessions -->
+        <div class="callout" id="callout-messaging" style="display:none;">
+          <strong id="callout-messaging-text"></strong>
+        </div>
+
+        <p style="text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 4px;">These words will appear on their screen after they sign in.</p>
+        <div class="words-display" id="waiting-words"></div>
+        <p style="text-align: center; font-size: 13px; color: var(--text-muted); margin-top: -8px;">Your passphrase &mdash; do not share until identity is confirmed</p>
+
+        <div id="auth-progress" class="auth-progress" style="display:none;"></div>
+
+        <p style="text-align: center; font-size: 13px; color: var(--text-muted);">This session will expire in <span id="timer">10:00</span></p>
+      </div>
+    </div>
+
+    <!-- Screen 4: Words revealed (matched) -->
+    <div id="screen-matched" class="screen">
+      <div class="card">
+        <h2>Session matched!</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-top: -8px;">The person successfully proved they control the selected accounts.</p>
+
+        <div id="matched-profiles"></div>
+
+        <p>Ask them to read the words on their screen aloud:</p>
+
+        <div class="words-display" id="verifier-words"></div>
+
+        <div class="callout">
+          <strong>"Can you read me the three words on your screen?"</strong>
+        </div>
+
+        <button class="btn btn-success" id="btn-verified">Words Match &mdash; Verified!</button>
+        <button class="btn btn-outline" id="btn-no-match">Words Don't Match</button>
+      </div>
+    </div>
+
+    <!-- Screen 5: Trust confirmed -->
+    <div id="screen-confirmed" class="screen">
+      <div class="card success-card">
+        <div class="success-icon">&#10003;</div>
+        <h2>Trust Established</h2>
+        <p id="confirmed-text"></p>
+
+        <div class="upsell">
+          <p>Want to make this permanent? Add them to your Vero contacts &mdash; next time, you'll always know it's really them.</p>
+          <button class="btn btn-primary" id="btn-add-contacts">Add to Vero Contacts</button>
+          <button class="btn btn-outline" onclick="window.location.href='index.html'">Maybe Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Vero App required -->
+    <div id="modal-overlay" class="modal-overlay" style="display:none;">
+      <div class="modal">
+        <div class="modal-icon">
+          <img src="/assets/vero-text.svg" alt="Vero" style="height: 28px;">
+        </div>
+        <h3>This requires the Vero app</h3>
+        <p>Persistent identity verification and contact management are coming soon in the Vero app for iOS and Android.</p>
+        <button class="btn btn-primary" id="btn-modal-close">Got it</button>
+      </div>
+    </div>
+
+    <!-- Screen: Error -->
+    <div id="screen-error" class="screen">
+      <div class="card">
+        <div class="error-msg" id="error-message">Something went wrong.</div>
+        <button class="btn btn-primary" onclick="window.location.href='verifier.html'">Try Again</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="https://zeroth.technology">Zeroth Attest, Inc 2026</a>
+    </div>
+  </div>
+
+  <script>
+    // Provider metadata (mirrors server-side PROVIDER_META)
+    const PROVIDERS = {
+      google:    { label: 'Google',    type: 'oauth', handleLabel: 'Enter their Gmail address',             handlePlaceholder: 'name@gmail.com' },
+      linkedin:  { label: 'LinkedIn',  type: 'oauth', handleLabel: 'Enter their LinkedIn profile URL or email',  handlePlaceholder: 'linkedin.com/in/jane-doe or name@email.com' },
+      github:    { label: 'GitHub',    type: 'oauth', handleLabel: 'Enter their GitHub username or email',  handlePlaceholder: 'octocat or name@email.com' },
+      microsoft: { label: 'Microsoft', type: 'oauth', handleLabel: 'Enter their Microsoft / Outlook email', handlePlaceholder: 'name@outlook.com' },
+      facebook:  { label: 'Facebook',  type: 'oauth', handleLabel: 'Enter their Facebook email',            handlePlaceholder: 'name@email.com' },
+      apple:     { label: 'Apple',     type: 'oauth', handleLabel: 'Enter their Apple ID email',            handlePlaceholder: 'name@icloud.com' },
+      discord:   { label: 'Discord',   type: 'oauth', handleLabel: 'Enter their Discord username or email', handlePlaceholder: 'username or name@email.com' },
+      tiktok:    { label: 'TikTok',    type: 'oauth', handleLabel: 'Enter their TikTok username',           handlePlaceholder: '@username' },
+      instagram: { label: 'Instagram', type: 'oauth', handleLabel: 'Enter their Instagram username',        handlePlaceholder: '@username' },
+      telegram:  { label: 'Telegram',  type: 'oauth', handleLabel: 'Enter their Telegram username',         handlePlaceholder: '@username' },
+      youtube:   { label: 'YouTube',   type: 'oauth', handleLabel: 'Enter their YouTube channel URL or email', handlePlaceholder: 'youtube.com/@handle or name@gmail.com' },
+      sms:       { label: 'SMS',       type: 'sms',   handleLabel: 'Enter their phone number',        handlePlaceholder: '+1 (555) 123-4567', securityLevel: 'low' },
+      email:     { label: 'Email',     type: 'email', handleLabel: 'Enter their email address',       handlePlaceholder: 'name@example.com', securityLevel: 'low' },
+    };
+
+    let sessionId = null;
+    let selectedProvider = 'google';
+    let selectedWords = [];
+    let sessionCreatedAt = null;
+    let anchors = []; // { provider, handle }
+    let lastMatchedAnchors = null;
+
+    // Set the site URL in the instructions dynamically
+    const siteUrlEl = document.getElementById('site-url');
+    if (siteUrlEl) {
+      siteUrlEl.textContent = window.location.host;
+    }
+
+    // Provider tabs
+    document.querySelectorAll('.provider-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        if (tab.classList.contains('used')) return;
+        if (tab.dataset.comingSoon) {
+          alert('Facebook login is coming soon!');
+          return;
+        }
+        document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        selectedProvider = tab.dataset.provider;
+        const meta = PROVIDERS[selectedProvider];
+        document.getElementById('handle-label').textContent = meta.handleLabel;
+        document.getElementById('presenter-handle').placeholder = meta.handlePlaceholder;
+
+        // Show/hide security warning for low-security providers
+        const warning = document.getElementById('security-warning');
+        warning.style.display = meta.securityLevel === 'low' ? 'flex' : 'none';
+      });
+    });
+
+    // Normalize handle input — extract slug from LinkedIn URLs, etc.
+    function normalizeHandle(handle, provider) {
+      handle = handle.trim();
+      if (provider === 'linkedin') {
+        // Match linkedin.com/in/some-slug (with or without protocol, www, trailing slash)
+        const match = handle.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([^\/?#]+)/i);
+        if (match) return match[1];
+      }
+      return handle;
+    }
+
+    // ── Anchor management ──
+
+    document.getElementById('btn-add-anchor').addEventListener('click', addAnchor);
+
+    // Allow Enter key in handle input to add anchor
+    document.getElementById('presenter-handle').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addAnchor();
+      }
+    });
+
+    function addAnchor() {
+      const raw = document.getElementById('presenter-handle').value.trim();
+      if (!raw) {
+        alert('Please enter their identifier.');
+        return;
+      }
+      const handle = normalizeHandle(raw, selectedProvider);
+
+      // Check if provider already added
+      if (anchors.some(a => a.provider === selectedProvider)) {
+        alert(`${PROVIDERS[selectedProvider].label} has already been added.`);
+        return;
+      }
+
+      anchors.push({ provider: selectedProvider, handle });
+      document.getElementById('presenter-handle').value = '';
+      renderAnchors();
+      selectNextAvailableProvider();
+    }
+
+    function removeAnchor(index) {
+      anchors.splice(index, 1);
+      renderAnchors();
+      selectNextAvailableProvider();
+    }
+
+    function renderAnchors() {
+      const list = document.getElementById('anchor-list');
+      const items = document.getElementById('anchor-items');
+      const startBtn = document.getElementById('btn-create-session');
+
+      items.innerHTML = '';
+
+      if (anchors.length === 0) {
+        list.style.display = 'none';
+        startBtn.style.display = 'none';
+        // Re-enable all provider tabs
+        document.querySelectorAll('.provider-tab').forEach(t => {
+          t.classList.remove('used');
+          t.disabled = false;
+        });
+        return;
+      }
+
+      list.style.display = 'block';
+      startBtn.style.display = '';
+      startBtn.textContent = anchors.length === 1
+        ? 'Start Verification (1 account)'
+        : `Start Verification (${anchors.length} accounts)`;
+
+      anchors.forEach((anchor, i) => {
+        const item = document.createElement('div');
+        item.className = 'anchor-item';
+        item.innerHTML = `
+          <div class="anchor-item-info">
+            <span class="anchor-item-provider">${PROVIDERS[anchor.provider].label}</span>
+            <span class="anchor-item-handle">${anchor.handle}</span>
+          </div>
+          <button class="anchor-item-remove" data-index="${i}">&times;</button>
+        `;
+        items.appendChild(item);
+      });
+
+      // Attach remove handlers
+      items.querySelectorAll('.anchor-item-remove').forEach(btn => {
+        btn.addEventListener('click', () => removeAnchor(parseInt(btn.dataset.index)));
+      });
+
+      // Disable provider tabs that are already used
+      const usedProviders = new Set(anchors.map(a => a.provider));
+      document.querySelectorAll('.provider-tab').forEach(tab => {
+        const used = usedProviders.has(tab.dataset.provider);
+        tab.classList.toggle('used', used);
+        tab.disabled = used;
+      });
+    }
+
+    function selectNextAvailableProvider() {
+      const usedProviders = new Set(anchors.map(a => a.provider));
+      const available = Object.keys(PROVIDERS).find(p => !usedProviders.has(p));
+      if (available) {
+        selectedProvider = available;
+        document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+        const tab = document.querySelector(`.provider-tab[data-provider="${available}"]`);
+        if (tab) {
+          tab.classList.add('active');
+          const meta = PROVIDERS[available];
+          document.getElementById('handle-label').textContent = meta.handleLabel;
+          document.getElementById('presenter-handle').placeholder = meta.handlePlaceholder;
+        }
+      }
+    }
+
+    // ── Create session ──
+
+    document.getElementById('btn-create-session').addEventListener('click', createSession);
+
+    async function createSession() {
+      if (anchors.length === 0) return;
+
+      try {
+        const res = await fetch('/api/simple/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anchors }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        sessionId = data.sessionId;
+        sessionCreatedAt = Date.now();
+        renderWordGrid(data.candidateWords);
+        showScreen('screen-words');
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    // ── Word selection ──
+
+    function renderWordGrid(words) {
+      const grid = document.getElementById('word-grid');
+      grid.innerHTML = '';
+      selectedWords = [];
+      updateWordCount();
+
+      words.forEach(word => {
+        const chip = document.createElement('button');
+        chip.className = 'word-chip';
+        chip.textContent = word;
+        chip.addEventListener('click', () => toggleWord(chip, word));
+        grid.appendChild(chip);
+      });
+    }
+
+    function toggleWord(chip, word) {
+      if (chip.classList.contains('selected')) {
+        chip.classList.remove('selected');
+        selectedWords = selectedWords.filter(w => w !== word);
+      } else {
+        if (selectedWords.length >= 3) return;
+        chip.classList.add('selected');
+        selectedWords.push(word);
+      }
+      updateWordCount();
+      document.querySelectorAll('.word-chip').forEach(c => {
+        if (!c.classList.contains('selected')) {
+          c.classList.toggle('disabled', selectedWords.length >= 3);
+        }
+      });
+    }
+
+    function updateWordCount() {
+      document.getElementById('selected-count').textContent = selectedWords.length;
+      document.getElementById('btn-confirm-words').disabled = selectedWords.length !== 3;
+    }
+
+    // Open native SMS or email app with pre-filled verification message
+    function openMessagingUri(msg) {
+      const wordList = msg.words ? msg.words.join(', ') : '';
+      if (msg.type === 'sms') {
+        const body = msg.mode === 'words'
+          ? `Your Vero verification words are: ${wordList}. Read these aloud when asked.`
+          : `Your Vero verification PIN is: ${msg.pin}. Enter this on the verification screen.`;
+        window.open(`sms:${msg.handle}?&body=${encodeURIComponent(body)}`, '_blank');
+      } else if (msg.type === 'email') {
+        const subject = msg.mode === 'words' ? 'Vero Voice Verification' : 'Vero Voice Verification PIN';
+        const body = msg.mode === 'words'
+          ? `Your Vero verification words are: ${wordList}. Read these aloud when asked.`
+          : `Your Vero verification PIN is: ${msg.pin}. Enter this on the verification screen.`;
+        window.open(`mailto:${msg.handle}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+      }
+    }
+
+    // Confirm words
+    document.getElementById('btn-confirm-words').addEventListener('click', async () => {
+      try {
+        const res = await fetch(`/api/simple/session/${sessionId}/words`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ words: selectedWords }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        // Open native SMS/email apps for any messaging anchors
+        if (data.messaging && data.messaging.length > 0) {
+          data.messaging.forEach(msg => openMessagingUri(msg));
+        }
+
+        showWaitingScreen();
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+
+    // ── Waiting screen ──
+
+    function showWaitingScreen() {
+      // Determine if this is a sole SMS/email session
+      const isSoleMessaging = anchors.length === 1 &&
+        ['sms', 'email'].includes(PROVIDERS[anchors[0].provider].type);
+      const hasMessagingAnchors = anchors.some(a =>
+        ['sms', 'email'].includes(PROVIDERS[a.provider].type));
+      const oauthAnchors = anchors.filter(a => PROVIDERS[a.provider].type === 'oauth');
+
+      // Build share link for the presenter
+      const isVoiceHost = window.location.hostname === 'voice.vero.technology';
+      const presenterBase = isVoiceHost
+        ? 'https://voice.vero.technology'
+        : `${window.location.origin}/simple/presenter.html`;
+      const shareUrl = `${presenterBase}?session=${sessionId}`;
+
+      const shareOptionsEl = document.getElementById('share-options');
+      const calloutMessagingEl = document.getElementById('callout-messaging');
+      const calloutMessagingText = document.getElementById('callout-messaging-text');
+
+      if (isSoleMessaging) {
+        // SMS/email only — no link needed, show callout instead
+        shareOptionsEl.style.display = 'none';
+        calloutMessagingEl.style.display = '';
+        const channel = PROVIDERS[anchors[0].provider].type === 'sms' ? 'phone' : 'email';
+        calloutMessagingText.textContent = `The verification words have been sent to their ${channel}. Ask them to read the words they received aloud.`;
+      } else {
+        shareOptionsEl.style.display = '';
+        calloutMessagingEl.style.display = 'none';
+        const copyBtn = document.getElementById('btn-copy-link');
+        copyBtn.dataset.url = shareUrl;
+        copyBtn.onclick = async () => {
+          await navigator.clipboard.writeText(shareUrl);
+          copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+          copyBtn.style.color = 'var(--success-color, #22c55e)';
+          setTimeout(() => {
+            copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+            copyBtn.style.color = '';
+          }, 2000);
+        };
+      }
+
+      // Show progress tracker for multi-anchor
+      const progressEl = document.getElementById('auth-progress');
+      if (anchors.length > 1) {
+        progressEl.style.display = '';
+        progressEl.innerHTML = '';
+        anchors.forEach(anchor => {
+          const item = document.createElement('div');
+          item.className = 'auth-progress-item pending';
+          item.id = `progress-${anchor.provider}`;
+          item.innerHTML = `
+            <span class="auth-progress-icon">&#9711;</span>
+            <span>${PROVIDERS[anchor.provider].label}</span>
+            <span class="auth-progress-status" style="margin-left:auto; color:var(--text-muted);">Waiting...</span>
+          `;
+          progressEl.appendChild(item);
+        });
+      } else {
+        progressEl.style.display = 'none';
+      }
+
+      // Show selected words on waiting screen
+      const waitingWords = document.getElementById('waiting-words');
+      waitingWords.innerHTML = '';
+      selectedWords.forEach(word => {
+        const badge = document.createElement('div');
+        badge.className = 'word-badge';
+        badge.textContent = word;
+        waitingWords.appendChild(badge);
+      });
+
+      showScreen('screen-waiting');
+      startTimer();
+      pollForMatch();
+    }
+
+    // ── Timer ──
+
+    function startTimer() {
+      const timerEl = document.getElementById('timer');
+      const update = () => {
+        const elapsed = Math.floor((Date.now() - sessionCreatedAt) / 1000);
+        const remaining = Math.max(0, 600 - elapsed);
+        const min = Math.floor(remaining / 60);
+        const sec = remaining % 60;
+        timerEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+        if (remaining <= 0) {
+          showError('Session expired. Please start a new one.');
+          return;
+        }
+        setTimeout(update, 1000);
+      };
+      update();
+    }
+
+    // ── Poll for presenter match via SSE ──
+
+    function pollForMatch() {
+      const evtSource = new EventSource(`/api/simple/session/${sessionId}/poll`);
+
+      evtSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.state === 'PARTIAL') {
+          updateAuthProgress(data);
+        } else if (data.state === 'MATCHED') {
+          evtSource.close();
+          showMatchedScreen(data.anchors);
+        }
+      };
+
+      evtSource.onerror = () => {
+        evtSource.close();
+        // Fallback: poll the result endpoint
+        setTimeout(async () => {
+          try {
+            const res = await fetch(`/api/simple/session/${sessionId}/result`);
+            const data = await res.json();
+            if (data.state === 'MATCHED') {
+              showMatchedScreen(data.anchors);
+            } else if (data.state === 'PARTIAL') {
+              // Reconnect SSE
+              pollForMatch();
+            }
+          } catch (e) { /* ignore */ }
+        }, 2000);
+      };
+    }
+
+    function updateAuthProgress(data) {
+      if (data.lastProvider) {
+        const item = document.getElementById(`progress-${data.lastProvider}`);
+        if (item) {
+          item.className = 'auth-progress-item completed';
+          item.innerHTML = `
+            <span class="auth-progress-icon">&#10003;</span>
+            <span>${PROVIDERS[data.lastProvider].label}</span>
+            <span class="auth-progress-status" style="margin-left:auto; color:var(--success-color);">Authenticated</span>
+          `;
+        }
+      }
+    }
+
+    // ── Matched screen ──
+
+    // Profile field configuration (shared for all profile cards)
+    const PROFILE_FIELDS = [
+      { key: 'email', label: 'Email', format: (v, p) =>
+        p.email_verified ? v + ' \u2713' : v
+      },
+      { key: 'username', label: 'Username', format: v => '@' + v },
+      { key: 'company', label: 'Company' },
+      { key: 'jobTitle', label: 'Title' },
+      { key: 'department', label: 'Department' },
+      { key: 'location', label: 'Location' },
+      { key: 'bio', label: 'Bio', wrap: true },
+      { key: 'profileUrl', label: 'Profile', isLink: true },
+      { key: 'website', label: 'Website', isLink: true },
+      { key: 'twitterUsername', label: 'X / Twitter', format: v => '@' + v },
+      { key: 'accountCreated', label: 'Member since', format: v => {
+        const d = new Date(v);
+        return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+      }},
+      { key: 'followers', label: 'Followers', format: v => v.toLocaleString() },
+      { key: 'publicRepos', label: 'Public repos', format: v => v.toLocaleString() },
+    ];
+
+    function showMatchedScreen(anchorsData) {
+      lastMatchedAnchors = anchorsData;
+
+      const profilesContainer = document.getElementById('matched-profiles');
+      profilesContainer.innerHTML = '';
+
+      anchorsData.forEach(anchor => {
+        const profile = anchor.profile;
+        const card = document.createElement('div');
+        card.className = 'profile-card';
+
+        // Header: picture + name + provider
+        const header = document.createElement('div');
+        header.className = 'profile-card-header';
+
+        if (profile.picture) {
+          const pic = document.createElement('img');
+          pic.className = 'profile-pic';
+          pic.referrerPolicy = 'no-referrer';
+          pic.alt = '';
+          pic.onerror = () => { pic.style.display = 'none'; };
+          pic.src = profile.picture;
+          header.appendChild(pic);
+        }
+
+        const identity = document.createElement('div');
+        identity.className = 'profile-card-identity';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'profile-name';
+        nameEl.textContent = profile.name || 'Authenticated User';
+
+        const providerEl = document.createElement('div');
+        providerEl.className = 'profile-provider';
+        providerEl.textContent = `via ${PROVIDERS[anchor.provider].label}`;
+
+        identity.appendChild(nameEl);
+        identity.appendChild(providerEl);
+        header.appendChild(identity);
+        card.appendChild(header);
+
+        // Detail rows
+        const details = document.createElement('div');
+        details.className = 'profile-card-details';
+        let hasDetails = false;
+
+        PROFILE_FIELDS.forEach(({ key, label, format, isLink, wrap }) => {
+          const value = profile[key];
+          if (value == null || value === '') return;
+
+          hasDetails = true;
+          const row = document.createElement('div');
+          row.className = 'profile-detail-row' + (wrap ? ' wrap' : '');
+
+          const labelEl = document.createElement('span');
+          labelEl.className = 'profile-detail-label';
+          labelEl.textContent = label;
+
+          const valueEl = document.createElement('span');
+          valueEl.className = 'profile-detail-value';
+
+          const displayValue = format ? format(value, profile) : String(value);
+
+          if (isLink) {
+            const a = document.createElement('a');
+            a.href = value.startsWith('http') ? value : 'https://' + value;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = displayValue.replace(/^https?:\/\/(www\.)?/, '');
+            a.className = 'profile-detail-link';
+            valueEl.appendChild(a);
+          } else {
+            valueEl.textContent = displayValue;
+          }
+
+          row.appendChild(labelEl);
+          row.appendChild(valueEl);
+          details.appendChild(row);
+        });
+
+        if (hasDetails) {
+          card.appendChild(details);
+        }
+
+        profilesContainer.appendChild(card);
+      });
+
+      // Words
+      const wordsContainer = document.getElementById('verifier-words');
+      wordsContainer.innerHTML = '';
+      selectedWords.forEach(word => {
+        const badge = document.createElement('div');
+        badge.className = 'word-badge';
+        badge.textContent = word;
+        wordsContainer.appendChild(badge);
+      });
+
+      showScreen('screen-matched');
+    }
+
+    // ── Confirmed ──
+
+    document.getElementById('btn-verified').addEventListener('click', async () => {
+      if (!lastMatchedAnchors) return;
+
+      // Notify the server (and the presenter) that verification is confirmed
+      try {
+        await fetch(`/api/simple/session/${sessionId}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        // Non-blocking — show confirmed screen even if the notify fails
+        console.error('Failed to confirm session:', e);
+      }
+
+      const providerLabels = lastMatchedAnchors.map(a => PROVIDERS[a.provider].label);
+      let providerText;
+      if (providerLabels.length === 1) {
+        providerText = `their ${providerLabels[0]} identity`;
+      } else {
+        providerText = `their ${providerLabels.slice(0, -1).join(', ')} and ${providerLabels[providerLabels.length - 1]} identities`;
+      }
+
+      const name = lastMatchedAnchors[0]?.profile?.name || 'the presenter';
+      let text = `You verified that ${name} authenticated as themselves, right now, using ${providerText}.`;
+
+      // List confirmed emails
+      const emails = lastMatchedAnchors
+        .map(a => a.profile?.email)
+        .filter(Boolean);
+      if (emails.length) {
+        text += ` Confirmed email${emails.length > 1 ? 's' : ''}: ${emails.join(', ')}`;
+      }
+
+      document.getElementById('confirmed-text').textContent = text;
+      showScreen('screen-confirmed');
+    });
+
+    // Vero app modal
+    document.getElementById('btn-add-contacts').addEventListener('click', () => {
+      document.getElementById('modal-overlay').style.display = 'flex';
+    });
+    document.getElementById('btn-modal-close').addEventListener('click', () => {
+      document.getElementById('modal-overlay').style.display = 'none';
+    });
+    document.getElementById('modal-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+    });
+
+    document.getElementById('btn-no-match').addEventListener('click', async () => {
+      // Notify the server (and the presenter) that words didn't match
+      try {
+        await fetch(`/api/simple/session/${sessionId}/reject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        console.error('Failed to reject session:', e);
+      }
+
+      showError('This person was not able to prove control over your chosen trust anchors. This may be an impersonation attempt \u2014 proceed with caution.');
+    });
+
+    // ── Helpers ──
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showError(msg) {
+      document.getElementById('error-message').textContent = msg;
+      showScreen('screen-error');
+    }
+  </script>
+  <script>
+    const stickyHeader = document.getElementById('sticky-header');
+    const heroLogo = document.getElementById('hero-logo');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        stickyHeader.classList.add('visible');
+        if (heroLogo) heroLogo.classList.add('faded');
+      } else {
+        stickyHeader.classList.remove('visible');
+        if (heroLogo) heroLogo.classList.remove('faded');
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>

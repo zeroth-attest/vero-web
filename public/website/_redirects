@@ -1,0 +1,6 @@
+# Ensure proper MIME types for audio files
+/assets/*.mp3   /assets/:splat  200
+/assets/*.m4a   /assets/:splat  200
+
+# SPA fallback for client-side routing
+/*    /index.html   200 

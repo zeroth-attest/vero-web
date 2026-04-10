@@ -2,9 +2,10 @@
   "name": "vero-web",
   "version": "1.0.0",
   "description": "A simple web application that converts hexadecimal session keys into visual blink sequences.",
-  "main": "script.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,13 @@
   },
   "homepage": "https://github.com/zeroth-tech/vero-web#readme",
   "dependencies": {
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "nodemailer": "^6.10.0"
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^6.10.0",
+    "twilio": "^5.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }

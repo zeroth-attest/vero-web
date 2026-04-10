@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vero Voice - Style Guide</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="/assets/zeroth-0-favicon.png" type="image/png">
+  <style>
+    /* Style guide overrides — wider layout, all screens visible */
+    .screen { display: block !important; }
+    .app { max-width: 900px; }
+
+    .sg-section {
+      margin-bottom: 48px;
+    }
+    .sg-section-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary-color);
+      letter-spacing: 0.5px;
+    }
+    .sg-section-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .sg-subsection {
+      margin-bottom: 32px;
+    }
+    .sg-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    /* Color swatches */
+    .sg-colors {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .sg-swatch {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+    .sg-swatch-color {
+      height: 72px;
+    }
+    .sg-swatch-info {
+      padding: 10px 12px;
+      background: var(--card-bg);
+    }
+    .sg-swatch-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .sg-swatch-value {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    /* Typography specimens */
+    .sg-type-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .sg-type-meta {
+      width: 160px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+      line-height: 1.5;
+    }
+
+    /* Icon grid */
+    .sg-icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .sg-icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .sg-icon-item svg {
+      width: 32px;
+      height: 32px;
+    }
+    .sg-icon-item span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Button gallery */
+    .sg-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .sg-btn-row .btn {
+      width: auto;
+      min-width: 180px;
+    }
+
+    /* Spacing / layout helpers */
+    .sg-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .sg-col {
+      flex: 1;
+      min-width: 280px;
+    }
+    .sg-spacer {
+      height: 16px;
+    }
+    .sg-divider {
+      border: none;
+      border-top: 1px solid var(--card-border);
+      margin: 32px 0;
+    }
+
+    /* Inline code */
+    .sg-code {
+      font-family: monospace;
+      font-size: 12px;
+      background: #222;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <a href="index.html"><img src="/assets/vero-text.svg" alt="Vero"></a>
+      <div class="subtitle">Style Guide</div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- LOGOS & BRAND MARKS                         -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="sg-section">
+      <div class="sg-section-title">Logos &amp; Brand Marks</div>
+      <div class="sg-section-desc">SVG brand assets used in the app header, landing pages, and favicons.</div>
+
+      <div class="sg-row">
+        <div class="sg-col">
+          <div class="sg-label">Primary Logo (vero-logo.svg)</div>
+          <div style="background:#1a1a1a; border-radius:10px; padding:24px; border:1px solid var(--card-border); text-align:center;">
+            <img src="/assets/vero-logo.svg" alt="Vero Logo" style="width:260px; height:auto;">
+          </div>
+        </div>
+        <div class="sg-col">
+          <div class="sg-label">Text Logo (vero-text.svg)</div>
+          <div style="background:#1a1a1a; border-radius:10px; padding:24px; border:1px solid var(--card-border); text-align:center;">
+            <img src="/assets/vero-text.svg" alt="Vero Text" style="width:260px; height:auto;">
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-spacer"></div>
+
+      <div class="sg-row">
+        <div class="sg-col">
+          <div class="sg-label">Favicon</div>
+          <div style="background:#1a1a1a; border-radius:10px; padding:24px; border:1px solid var(--card-border); display:flex; align-items:center; gap:16px;">
+            <img src="/assets/zeroth-0-favicon.png" alt="Favicon" style="width:32px; height:32px;">
+            <img src="/assets/zeroth-0-favicon.png" alt="Favicon" style="width:16px; height:16px;">
+            <span style="font-size:12px; color:var(--text-muted);">zeroth-0-favicon.png</span>
+          </div>
+        </div>
+        <div class="sg-col">
+          <div class="sg-label">Zeroth Technology Logo</div>
+          <div style="background:#1a1a1a; border-radius:10px; padding:24px; border:1px solid var(--card-border); text-align:center;">
+            <img src="/assets/zeroth-tech-logo.svg" alt="Zeroth Tech" style="width:200px; height:auto;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- COLOR PALETTE                               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="sg-section">
+      <div class="sg-section-title">Color Palette</div>
+      <div class="sg-section-desc">CSS custom properties defined on <span class="sg-code">:root</span>. Dark theme with blue accent.</div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Core Colors</div>
+        <div class="sg-colors">
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#3399FF;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Primary</div>
+              <div class="sg-swatch-value">--primary-color: #3399FF</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#2a7acc;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Primary Hover</div>
+              <div class="sg-swatch-value">#2a7acc</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#22c55e;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Success</div>
+              <div class="sg-swatch-value">--success-color: #22c55e</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#ef4444;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Error</div>
+              <div class="sg-swatch-value">--error-color: #ef4444</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Backgrounds &amp; Surfaces</div>
+        <div class="sg-colors">
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#111; border-bottom:1px solid #333;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Background</div>
+              <div class="sg-swatch-value">--background-color: #111</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#1a1a1a; border-bottom:1px solid #333;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Card BG</div>
+              <div class="sg-swatch-value">--card-bg: #1a1a1a</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#222; border-bottom:1px solid #333;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Input / Word BG</div>
+              <div class="sg-swatch-value">--word-bg: #222</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#333;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Card Border</div>
+              <div class="sg-swatch-value">--card-border: #333</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Text &amp; Transparency</div>
+        <div class="sg-colors">
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#fff;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Text</div>
+              <div class="sg-swatch-value">--text-color: #fff</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#999;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Muted Text</div>
+              <div class="sg-swatch-value">--text-muted: #999</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#555;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Placeholder</div>
+              <div class="sg-swatch-value">#555</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:rgba(51,153,255,0.08); border-bottom:1px solid rgba(51,153,255,0.2);"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Primary Tint</div>
+              <div class="sg-swatch-value">rgba(51,153,255, 0.08)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Provider Brand Colors</div>
+        <div class="sg-colors">
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#4285F4;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Google Blue</div>
+              <div class="sg-swatch-value">#4285F4</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#0077B5;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">LinkedIn</div>
+              <div class="sg-swatch-value">#0077B5</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#24292e;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">GitHub</div>
+              <div class="sg-swatch-value">#24292e</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#F25022;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Microsoft Red</div>
+              <div class="sg-swatch-value">#F25022</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#1877F2;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Facebook</div>
+              <div class="sg-swatch-value">#1877F2</div>
+            </div>
+          </div>
+          <div class="sg-swatch">
+            <div class="sg-swatch-color" style="background:#000; border:1px solid #555;"></div>
+            <div class="sg-swatch-info">
+              <div class="sg-swatch-name">Apple</div>
+              <div class="sg-swatch-value">#000000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- TYPOGRAPHY                                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="sg-section">
+      <div class="sg-section-title">Typography</div>
+      <div class="sg-section-desc">
+        Font stack: <span class="sg-code">'Outfit', 'Poppins', sans-serif</span> loaded via Google Fonts.
+        Outfit is the primary display and body font; Poppins is the fallback.
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Outfit — Weight Scale</div>
+        <div style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:20px;">
+          <div class="sg-type-row">
+            <div class="sg-type-meta">100 Thin</div>
+            <div style="font-family:'Outfit'; font-weight:100; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">200 ExtraLight</div>
+            <div style="font-family:'Outfit'; font-weight:200; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">300 Light</div>
+            <div style="font-family:'Outfit'; font-weight:300; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">400 Regular</div>
+            <div style="font-family:'Outfit'; font-weight:400; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">500 Medium</div>
+            <div style="font-family:'Outfit'; font-weight:500; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">600 SemiBold</div>
+            <div style="font-family:'Outfit'; font-weight:600; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">700 Bold</div>
+            <div style="font-family:'Outfit'; font-weight:700; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">800 ExtraBold</div>
+            <div style="font-family:'Outfit'; font-weight:800; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row" style="border-bottom:none;">
+            <div class="sg-type-meta">900 Black</div>
+            <div style="font-family:'Outfit'; font-weight:900; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Poppins — Loaded Weights</div>
+        <div style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:20px;">
+          <div class="sg-type-row">
+            <div class="sg-type-meta">400 Regular</div>
+            <div style="font-family:'Poppins'; font-weight:400; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+          <div class="sg-type-row" style="border-bottom:none;">
+            <div class="sg-type-meta">600 SemiBold</div>
+            <div style="font-family:'Poppins'; font-weight:600; font-size:28px;">The quick brown fox jumps</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Type Scale (as used in components)</div>
+        <div style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:20px;">
+          <div class="sg-type-row">
+            <div class="sg-type-meta">24px / 700<br>Section title</div>
+            <div style="font-size:24px; font-weight:700;">Vero Voice Style Guide</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">20px / 600<br>Word badge</div>
+            <div style="font-size:20px; font-weight:600; letter-spacing:1px;">OCEAN</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">18px / 600<br>Card h2</div>
+            <div style="font-size:18px; font-weight:600;">Who do you want to verify?</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">16px / 500<br>Button / h3</div>
+            <div style="font-size:16px; font-weight:500;">Start Verification Session</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">15px / 400<br>Input / body</div>
+            <div style="font-size:15px; font-weight:400;">name@gmail.com</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">14px / 400<br>Body / callout</div>
+            <div style="font-size:14px; font-weight:400; color:var(--text-muted); line-height:1.5;">Choose how they'll authenticate, then enter their handle or email.</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">13px / 500<br>Label / caption</div>
+            <div style="font-size:13px; font-weight:500; color:var(--text-muted);">Their Gmail address</div>
+          </div>
+          <div class="sg-type-row">
+            <div class="sg-type-meta">12px / 400<br>Footnote</div>
+            <div style="font-size:12px; font-weight:400; color:var(--text-muted);">Zeroth Attest, Inc 2026</div>
+          </div>
+          <div class="sg-type-row" style="border-bottom:none;">
+            <div class="sg-type-meta">14px / 500 / UPPER<br>Subtitle</div>
+            <div style="font-size:14px; font-weight:500; letter-spacing:1px; text-transform:uppercase; color:var(--primary-color);">Vero Voice</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- ICONS                                       -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="sg-section">
+      <div class="sg-section-title">Icons</div>
+      <div class="sg-section-desc">Inline SVG icons for identity providers and UI states. No external icon library.</div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Provider Icons (SVG, 20x20 default)</div>
+        <div class="sg-icon-grid">
+          <div class="sg-icon-item">
+            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span>Google</span>
+          </div>
+          <div class="sg-icon-item">
+            <svg viewBox="0 0 24 24"><path fill="#0077B5" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            <span>LinkedIn</span>
+          </div>
+          <div class="sg-icon-item">
+            <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span>GitHub</span>
+          </div>
+          <div class="sg-icon-item">
+            <svg viewBox="0 0 24 24"><rect fill="#F25022" x="1" y="1" width="10" height="10"/><rect fill="#7FBA00" x="13" y="1" width="10" height="10"/><rect fill="#00A4EF" x="1" y="13" width="10" height="10"/><rect fill="#FFB900" x="13" y="13" width="10" height="10"/></svg>
+            <span>Microsoft</span>
+          </div>
+          <div class="sg-icon-item">
+            <svg viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <span>Facebook</span>
+          </div>
+          <div class="sg-icon-item">
+            <svg viewBox="0 0 24 24"><path fill="#fff" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            <span>Apple</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">UI State Icons (Unicode / CSS)</div>
+        <div class="sg-icon-grid">
+          <div class="sg-icon-item">
+            <div style="font-size:32px; color:var(--success-color);">&#10003;</div>
+            <span>Success check<br>&#38;#10003;</span>
+          </div>
+          <div class="sg-icon-item">
+            <div style="font-size:32px; color:var(--text-muted);">&#9711;</div>
+            <span>Pending circle<br>&#38;#9711;</span>
+          </div>
+          <div class="sg-icon-item">
+            <div style="font-size:32px; color:var(--error-color);">&times;</div>
+            <span>Close / Remove<br>&#38;times;</span>
+          </div>
+          <div class="sg-icon-item">
+            <div class="spinner" style="margin:0;"></div>
+            <span>Loading spinner<br>.spinner</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- BUTTONS                                     -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="sg-section">
+      <div class="sg-section-title">Buttons</div>
+      <div class="sg-section-desc">Full-width by default (<span class="sg-code">.btn</span>). Stacked with 12px gap via <span class="sg-code">.btn + .btn</span>.</div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Action Buttons</div>
+        <div style="max-width:400px;">
+          <button class="btn btn-primary">Primary Action</button>
+          <button class="btn btn-primary" disabled>Primary Disabled</button>
+          <button class="btn btn-success">Success / Confirm</button>
+          <button class="btn btn-outline">Outline / Secondary</button>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Provider Sign-in Buttons</div>
+        <div style="max-width:400px;">
+          <a class="btn btn-google" href="#" style="display:flex;">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Sign in with Google
+          </a>
+          <a class="btn btn-linkedin" href="#" style="display:flex;">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            Sign in with LinkedIn
+          </a>
+          <a class="btn btn-github" href="#" style="display:flex;">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path fill="white" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            Sign in with GitHub
+          </a>
+          <a class="btn btn-microsoft" href="#" style="display:flex;">
+            <svg class="btn-icon" viewBox="0 0 24 24"><rect fill="#F25022" x="1" y="1" width="10" height="10"/><rect fill="#7FBA00" x="13" y="1" width="10" height="10"/><rect fill="#00A4EF" x="1" y="13" width="10" height="10"/><rect fill="#FFB900" x="13" y="13" width="10" height="10"/></svg>
+            Sign in with Microsoft
+          </a>
+          <a class="btn btn-facebook" href="#" style="display:flex;">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path fill="white" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Sign in with Facebook
+          </a>
+          <a class="btn btn-apple" href="#" style="display:flex;">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path fill="white" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            Sign in with Apple
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- COMPONENTS                                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="sg-section">
+      <div class="sg-section-title">Components</div>
+      <div class="sg-section-desc">Reusable UI patterns used throughout the app.</div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Card</div>
+        <div class="card">
+          <h2>Card Heading</h2>
+          <p>Card body text with muted color. Cards are the primary content container with 24px padding, 12px radius, and a subtle border.</p>
+          <button class="btn btn-primary">Card Action</button>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Form Input</div>
+        <div class="card">
+          <div class="form-group">
+            <label>Their Gmail address</label>
+            <input type="text" class="form-input" placeholder="name@gmail.com">
+          </div>
+          <div class="form-group">
+            <label>Focused state</label>
+            <input type="text" class="form-input" value="john@example.com" style="border-color:var(--primary-color);">
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Provider Grid (3x2)</div>
+        <div class="card">
+          <div class="provider-grid">
+            <button class="provider-tab active" data-provider="google">
+              <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Google
+            </button>
+            <button class="provider-tab">
+              <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#0077B5" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              LinkedIn
+            </button>
+            <button class="provider-tab">
+              <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#fff" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </button>
+            <button class="provider-tab used">
+              <svg class="provider-tab-icon" viewBox="0 0 24 24"><rect fill="#F25022" x="1" y="1" width="10" height="10"/><rect fill="#7FBA00" x="13" y="1" width="10" height="10"/><rect fill="#00A4EF" x="1" y="13" width="10" height="10"/><rect fill="#FFB900" x="13" y="13" width="10" height="10"/></svg>
+              Microsoft
+            </button>
+            <button class="provider-tab">
+              <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              Facebook
+            </button>
+            <button class="provider-tab">
+              <svg class="provider-tab-icon" viewBox="0 0 24 24"><path fill="#fff" d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Apple
+            </button>
+          </div>
+          <p style="font-size:12px;">States shown: <strong>active</strong> (Google), default (LinkedIn, GitHub, Facebook, Apple), <strong>used/disabled</strong> (Microsoft)</p>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Word Chips (selection grid)</div>
+        <div class="card">
+          <div class="word-grid">
+            <button class="word-chip selected">OCEAN</button>
+            <button class="word-chip selected">TIMBER</button>
+            <button class="word-chip">CRYSTAL</button>
+            <button class="word-chip selected">FALCON</button>
+            <button class="word-chip disabled">HARBOR</button>
+            <button class="word-chip disabled">SUMMIT</button>
+          </div>
+          <div class="word-count"><span>3</span> of 3 selected</div>
+          <p style="font-size:12px; margin-top:12px;">States: <strong>selected</strong> (blue border), default, <strong>disabled</strong> (dimmed when limit reached)</p>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Word Badges (post-match display)</div>
+        <div class="card">
+          <div class="words-display">
+            <div class="word-badge">OCEAN</div>
+            <div class="word-badge">TIMBER</div>
+            <div class="word-badge">FALCON</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Callout</div>
+        <div class="callout">
+          <strong>"Go to voice.vero.technology and click 'I was asked to verify', then sign in with your GitHub and LinkedIn accounts."</strong>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Error Message</div>
+        <div class="error-msg">Authentication failed. Please try again.</div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Trust Anchor List</div>
+        <div class="card">
+          <div class="anchor-list" style="display:block;">
+            <label class="anchor-list-label">Required trust anchors:</label>
+            <div>
+              <div class="anchor-item">
+                <div class="anchor-item-info">
+                  <span class="anchor-item-provider">GitHub</span>
+                  <span class="anchor-item-handle">octocat</span>
+                </div>
+                <button class="anchor-item-remove">&times;</button>
+              </div>
+              <div class="anchor-item">
+                <div class="anchor-item-info">
+                  <span class="anchor-item-provider">LinkedIn</span>
+                  <span class="anchor-item-handle">jane-doe</span>
+                </div>
+                <button class="anchor-item-remove">&times;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Auth Progress (verifier waiting)</div>
+        <div class="card">
+          <div class="auth-progress" style="display:block;">
+            <div class="auth-progress-item completed">
+              <span class="auth-progress-icon">&#10003;</span>
+              <span>GitHub</span>
+              <span class="auth-progress-status" style="margin-left:auto; color:var(--success-color);">Authenticated</span>
+            </div>
+            <div class="auth-progress-item pending">
+              <span class="auth-progress-icon">&#9711;</span>
+              <span>LinkedIn</span>
+              <span class="auth-progress-status" style="margin-left:auto; color:var(--text-muted);">Waiting...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Auth Checklist (presenter multi-auth)</div>
+        <div class="card">
+          <div class="auth-checklist-item completed">
+            <span class="auth-checklist-icon">&#10003;</span>
+            <span>GitHub</span>
+            <span style="margin-left:auto; color:var(--success-color); font-size:13px;">Authenticated</span>
+          </div>
+          <a class="btn btn-linkedin" href="#" style="display:flex;">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            Sign in with LinkedIn
+          </a>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Profile Card (enriched)</div>
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <img class="profile-pic" src="https://avatars.githubusercontent.com/u/583231?v=4" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">
+            <div class="profile-card-identity">
+              <div class="profile-name">The Octocat</div>
+              <div class="profile-provider">via GitHub</div>
+            </div>
+          </div>
+          <div class="profile-card-details">
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Email</span>
+              <span class="profile-detail-value">octocat@github.com &#10003;</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Username</span>
+              <span class="profile-detail-value">@octocat</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Company</span>
+              <span class="profile-detail-value">@github</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Location</span>
+              <span class="profile-detail-value">San Francisco</span>
+            </div>
+            <div class="profile-detail-row wrap">
+              <span class="profile-detail-label">Bio</span>
+              <span class="profile-detail-value">I'm the friendly mascot of GitHub, and I love to code!</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Profile</span>
+              <span class="profile-detail-value"><a class="profile-detail-link" href="#">github.com/octocat</a></span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Member since</span>
+              <span class="profile-detail-value">January 2011</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Followers</span>
+              <span class="profile-detail-value">14,237</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Public repos</span>
+              <span class="profile-detail-value">8</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Success Card</div>
+        <div class="card success-card">
+          <div class="success-icon">&#10003;</div>
+          <h2>Trust Established</h2>
+          <p>You verified that The Octocat authenticated as themselves, right now, using their GitHub and LinkedIn identities.</p>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Role Buttons (landing page)</div>
+        <div class="role-buttons">
+          <button class="role-btn">
+            <div class="role-icon">&#128269;</div>
+            <div class="role-text">
+              <h3>I want to verify someone</h3>
+              <p>Set up a verification challenge to confirm someone's identity</p>
+            </div>
+          </button>
+          <button class="role-btn">
+            <div class="role-icon">&#128100;</div>
+            <div class="role-text">
+              <h3>I was asked to verify</h3>
+              <p>Someone asked you to prove your identity</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div class="sg-subsection">
+        <div class="sg-label">Provider Logo Badges (landing page)</div>
+        <div class="provider-logos">
+          <span class="provider-logo-item">Google</span>
+          <span class="provider-logo-item">LinkedIn</span>
+          <span class="provider-logo-item">GitHub</span>
+          <span class="provider-logo-item">Microsoft</span>
+          <span class="provider-logo-item">Apple</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SPACING & LAYOUT                            -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="sg-section">
+      <div class="sg-section-title">Spacing &amp; Layout</div>
+      <div class="sg-section-desc">Key dimensions and layout constraints.</div>
+      <div class="card">
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">App max-width</span>
+          <span class="profile-detail-value sg-code">480px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">App padding</span>
+          <span class="profile-detail-value sg-code">20px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Card padding</span>
+          <span class="profile-detail-value sg-code">24px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Card border-radius</span>
+          <span class="profile-detail-value sg-code">12px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Button border-radius</span>
+          <span class="profile-detail-value sg-code">8px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Input border-radius</span>
+          <span class="profile-detail-value sg-code">8px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Button padding</span>
+          <span class="profile-detail-value sg-code">14px 20px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Input padding</span>
+          <span class="profile-detail-value sg-code">12px 14px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Button stack gap</span>
+          <span class="profile-detail-value sg-code">12px (margin-top)</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Card margin-bottom</span>
+          <span class="profile-detail-value sg-code">16px</span>
+        </div>
+        <div class="profile-detail-row">
+          <span class="profile-detail-label">Transition</span>
+          <span class="profile-detail-value sg-code">all 0.2s ease</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="https://zeroth.technology">Zeroth Attest, Inc 2026</a>
+    </div>
+  </div>
+</body>
+</html>

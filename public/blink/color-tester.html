@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Color Picker</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            transition: background-color 0.1s ease;
+            flex-direction: column;
+            color: white; /* Default text color, might need adjustment */
+            text-shadow: 1px 1px 2px black; /* Improve readability */
+        }
+        .color-display {
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background for text */
+            border-radius: 5px;
+        }
+        .sliders {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background-color: rgba(255, 255, 255, 0.8); /* Light background for sliders */
+            padding: 20px;
+            border-radius: 10px;
+            color: black; /* Black text for sliders */
+            text-shadow: none; /* Remove text shadow for sliders */
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 300px; /* Fixed width for alignment */
+        }
+        .slider-container label {
+            width: 50px; /* Fixed width for labels */
+            text-align: right;
+        }
+        .slider-container input[type="range"] {
+            flex-grow: 1;
+        }
+         .slider-container span {
+            width: 30px; /* Fixed width for value display */
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="color-display" id="color-hex">#87CEFA</div>
+    <div class="sliders">
+        <div class="slider-container">
+            <label for="red">Red:</label>
+            <input type="range" id="red" name="red" min="0" max="255" value="135">
+            <span id="red-value">135</span>
+        </div>
+        <div class="slider-container">
+            <label for="green">Green:</label>
+            <input type="range" id="green" name="green" min="0" max="255" value="206">
+            <span id="green-value">206</span>
+        </div>
+        <div class="slider-container">
+            <label for="blue">Blue:</label>
+            <input type="range" id="blue" name="blue" min="0" max="255" value="250">
+            <span id="blue-value">250</span>
+        </div>
+    </div>
+
+    <script>
+        const redSlider = document.getElementById('red');
+        const greenSlider = document.getElementById('green');
+        const blueSlider = document.getElementById('blue');
+
+        const redValueSpan = document.getElementById('red-value');
+        const greenValueSpan = document.getElementById('green-value');
+        const blueValueSpan = document.getElementById('blue-value');
+
+        const colorHexDisplay = document.getElementById('color-hex');
+        const body = document.body;
+
+        function updateColor() {
+            const r = redSlider.value;
+            const g = greenSlider.value;
+            const b = blueSlider.value;
+
+            // Update slider value displays
+            redValueSpan.textContent = r;
+            greenValueSpan.textContent = g;
+            blueValueSpan.textContent = b;
+
+            const rgbColor = `rgb(${r}, ${g}, ${b})`;
+            body.style.backgroundColor = rgbColor;
+
+            // Convert RGB to Hex
+            const rHex = parseInt(r).toString(16).padStart(2, '0');
+            const gHex = parseInt(g).toString(16).padStart(2, '0');
+            const bHex = parseInt(b).toString(16).padStart(2, '0');
+            const hexColor = `#${rHex}${gHex}${bHex}`.toUpperCase();
+            colorHexDisplay.textContent = hexColor;
+
+            // Adjust text color for better contrast
+            const brightness = (parseInt(r) * 299 + parseInt(g) * 587 + parseInt(b) * 114) / 1000;
+            body.style.color = brightness > 128 ? 'black' : 'white';
+             body.style.textShadow = brightness > 128 ? '1px 1px 2px white' : '1px 1px 2px black';
+
+        }
+
+        // Add event listeners
+        redSlider.addEventListener('input', updateColor);
+        greenSlider.addEventListener('input', updateColor);
+        blueSlider.addEventListener('input', updateColor);
+
+        // Initial color update
+        updateColor();
+    </script>
+</body>
+</html>

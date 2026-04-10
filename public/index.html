@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags for proper rendering and character encoding -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vero - Configure Session</title>
+    <!-- Stylesheet reference -->
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* Add cursor pointer to logo and URL preview for better UX */
+        .vero-logo, #verification-url-preview {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .vero-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        #verification-url-preview:hover {
+            color: #666; /* Slightly darken URL on hover */
+        }
+    </style>
+</head>
+<body>
+    <!-- Main container -->
+    <div class="container">
+        <!-- Header section -->
+        <img src="assets/vero-text.svg" alt="Vero Logo" class="vero-logo" id="vero-logo" onclick="testVerification()"/>
+
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <table>
+                <tr>
+                    <td colspan="2">
+                        <label for="session-key">Create aSession Key:</label>
+                        <input type="text" id="session-key" class="input-field" placeholder="Enter 4-6 character hex code" maxlength="6">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 50%; padding-right: 10px;">
+                        <label for="blink-rate">Blink Rate:</label>
+                        <select id="blink-rate" class="compact-select" name="blinkRate">
+                            <option value="100" selected>100 ms</option>
+                            <option value="200">200 ms</option>
+                            <option value="300">300 ms</option>
+                        </select>
+                    </td>
+                    <td style="width: 50%; padding-left: 10px;">
+                        <label for="key-type">Key Type:</label>
+                        <select id="key-type" class="compact-select" name="keyType">
+                            <option value="s" selected>Session</option>
+                            <option value="m">Multiplier</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <p class="information-text">Most of the time you shouldn't need to change these last two.</p>
+                        <br />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- URL preview section -->
+        <div style="margin-top: 5px; margin-bottom: 5px; max-width: 300px; margin-left: auto; margin-right: auto;">
+            <p id="verification-url-preview-label"><strong>Verification URL:</strong> (click to copy)</p>
+            <p id="verification-url-preview">https://video.vero.technology/blink?key=XXXXX,blink_rate=200,type=s</p>
+            <p id="copy-feedback" style="font-size: 12px; color: #4a86e8; height: 14px; margin-top: 5px;"></p>
+        </div>
+        
+        
+        <!-- Buttons section -->
+        <div class="button-container">
+            <button id="sms-button" class="btn">
+                <span>Send Via</span><span style="font-size: 0.1em;"><br></span><span>SMS</span>
+            </button>
+            <button id="email-button" class="btn">
+                <span>Send Via</span><span style="font-size: 0.1em;"><br></span><span>Email</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Consolidated JavaScript -->
+    <script>
+        /**
+         * Main application code for Vero authentication
+         * All functionality is contained within this single script
+         */
+
+        // ==============================================
+        // Constants
+        // ==============================================
+        const VERO_BLINK_BASE_URL = 'https://video.vero.technology';
+        
+        // ==============================================
+        // Global Functions (available outside DOMContentLoaded)
+        // ==============================================
+        
+        /**
+         * Global function for testing verification via logo click
+         * Must be global as it's called directly from the HTML
+         */
+        function testVerification() {
+            const sessionKeyInput = document.getElementById('session-key');
+            const blinkRateSelect = document.getElementById('blink-rate');
+            const keyTypeSelect = document.getElementById('key-type');
+            
+            // Validate session key
+            const sessionKey = sessionKeyInput.value.trim();
+            if (!sessionKey) {
+                alert('Please enter a session key.');
+                sessionKeyInput.focus();
+                return;
+            }
+            
+            // Check if the key is 4, 5, or 6 characters and a valid hex code
+            if (!/^[0-9A-Fa-f]{4,6}$/.test(sessionKey)) {
+                alert('Session key must be a 4, 5, or 6 character hexadecimal code (0-9, A-F).');
+                sessionKeyInput.focus();
+                return;
+            }
+            
+            // Get configuration values and build URL
+            const blinkRate = blinkRateSelect.value;
+            const keyType = keyTypeSelect.value;
+            
+            // Create the full verification URL
+            const verificationUrl = `${VERO_BLINK_BASE_URL}/blink?key=${sessionKey},blink_rate=${blinkRate},type=${keyType}`;
+            
+            // Navigate to the verification page
+            console.log("Testing verification with URL:", verificationUrl);
+            window.location.href = verificationUrl;
+        }
+
+        // ==============================================
+        // Document Ready Function
+        // ==============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get references to DOM elements
+            const sessionKeyInput = document.getElementById('session-key');
+            const blinkRateSelect = document.getElementById('blink-rate');
+            const keyTypeSelect = document.getElementById('key-type');
+            const smsButton = document.getElementById('sms-button');
+            const emailButton = document.getElementById('email-button');
+            const urlPreview = document.getElementById('verification-url-preview');
+            const urlPreviewLabel = document.getElementById('verification-url-preview-label');
+            const veroLogo = document.getElementById('vero-logo');
+            const copyFeedback = document.getElementById('copy-feedback');
+            
+            let currentVerificationUrl = ''; // Store the URL without the <br>
+            
+            // ==============================================
+            // Core Functions
+            // ==============================================
+            
+            /**
+             * Updates the verification URL preview with current settings
+             * Adds a line break for better display
+             * Updates the global variable for copying
+             */
+            function updateUrlPreview() {
+                const sessionKey = sessionKeyInput.value.trim() || 'XXXXX';
+                const blinkRate = blinkRateSelect.value;
+                const keyType = keyTypeSelect.value;
+                
+                // Create the URL with a line break after the domain
+                const baseUrl = `${VERO_BLINK_BASE_URL}/`;
+                const params = `blink?key=${sessionKey},blink_rate=${blinkRate},type=${keyType}`;
+                
+                // Update the preview with a line break
+                urlPreview.innerHTML = baseUrl + '<br />' + params;
+                
+                // Store the full URL (without line break) for copying
+                currentVerificationUrl = baseUrl + params;
+            }
+            
+            /**
+             * Validates the session key input
+             * @returns {boolean} True if the key is valid, false otherwise
+             */
+            function validateSessionKey() {
+                const sessionKey = sessionKeyInput.value.trim();
+                
+                if (!sessionKey) {
+                    alert('Please enter a session key.');
+                    sessionKeyInput.focus();
+                    return false;
+                }
+                
+                // Check if the key is a valid hex code
+                if (!/^[0-9A-Fa-f]{4,6}$/.test(sessionKey)) {
+                    alert('Session key must be a 4-6 character hexadecimal code (0-9, A-F).');
+                    sessionKeyInput.focus();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            /**
+             * Copies the current verification URL to the clipboard
+             */
+            function copyUrlToClipboard() {
+                // Check if clipboard API is available
+                if (!navigator.clipboard) {
+                    alert('Clipboard API not available in this browser.');
+                    return;
+                }
+                
+                navigator.clipboard.writeText(currentVerificationUrl).then(function() {
+                    // Provide feedback to the user
+                    copyFeedback.textContent = 'URL copied to clipboard!';
+                    // Clear the feedback message after a short delay
+                    setTimeout(() => {
+                        copyFeedback.textContent = '';
+                    }, 2000); 
+                }, function(err) {
+                    console.error('Could not copy text: ', err);
+                    copyFeedback.textContent = 'Failed to copy URL.';
+                    setTimeout(() => {
+                        copyFeedback.textContent = '';
+                    }, 2000);
+                });
+            }
+            
+            // ==============================================
+            // Event Listeners
+            // ==============================================
+            
+            // Update preview when inputs change
+            sessionKeyInput.addEventListener('input', updateUrlPreview);
+            blinkRateSelect.addEventListener('change', updateUrlPreview);
+            keyTypeSelect.addEventListener('change', updateUrlPreview);
+            
+            // Logo click handler (using inline onclick for reliability)
+            // veroLogo.addEventListener('click', testVerification); // Kept inline onclick
+            
+            // URL preview click handler for copying
+            urlPreview.addEventListener('click', copyUrlToClipboard);
+            
+            // SMS button click handler
+            smsButton.addEventListener('click', function() {
+                if (!validateSessionKey()) return;
+                
+                updateUrlPreview(); // Ensure URL is up-to-date
+                const smsBody = `Click this link to verify liveness with Vero: ${currentVerificationUrl}`;
+                const smsHref = `sms:?&body=${encodeURIComponent(smsBody)}`;
+                
+                window.open(smsHref, '_blank');
+            });
+            
+            // Email button click handler
+            emailButton.addEventListener('click', function() {
+                if (!validateSessionKey()) return;
+                
+                updateUrlPreview(); // Ensure URL is up-to-date
+                const emailSubject = 'Vero Authentication Link';
+                const emailBody = `Click this link to verify liveness with Vero: ${currentVerificationUrl}`;
+                const emailHref = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+                
+                window.open(emailHref, '_blank');
+            });
+            
+            // Initialize the URL preview on page load
+            updateUrlPreview();
+            
+            // Update URL preview label text
+            if (urlPreviewLabel) {
+                urlPreviewLabel.innerHTML = '<strong>Verification URL:</strong> (click URL to copy)';
+            }
+        });
+    </script>
+</body>
+</html>
