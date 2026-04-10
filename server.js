@@ -68,9 +68,9 @@ app.use((req, res, next) => {
 // ── Path-based routing (main domain + localhost dev) ──
 // These still work for the main domain and local development
 
-// Preview of the new landing page (not yet live at root)
-// Access at vero.technology/preview or localhost:8080/preview
-app.get('/preview', (req, res) => {
+// Landing page for trying Vero Voice / Vero Video
+// Access at vero.technology/try or localhost:8080/try
+app.get('/try', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'landing.html'));
 });
 
@@ -123,7 +123,7 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Vero web server running on port ${PORT}`);
   console.log(`  Existing site: http://localhost:${PORT}`);
-  console.log(`  New landing:   http://localhost:${PORT}/preview`);
+  console.log(`  Try Vero:      http://localhost:${PORT}/try`);
   console.log(`  Vero Voice:    http://localhost:${PORT}/voice`);
   console.log(`  Vero Video:    http://localhost:${PORT}/blink`);
 });

@@ -5,6 +5,18 @@ const CLEANUP_INTERVAL_MS = 60 * 1000; // Check every minute
 
 const sessions = new Map();
 
+// Helper: determine anchor type from provider name
+function getProviderType(provider) {
+  if (provider === 'sms') return 'sms';
+  if (provider === 'email') return 'email';
+  return 'oauth';
+}
+
+// Generate a 6-digit PIN for SMS/email verification in multi-anchor sessions
+function generatePin() {
+  return crypto.randomInt(100000, 999999).toString();
+}
+
 // Periodic cleanup of expired sessions
 setInterval(() => {
   const now = Date.now();
@@ -19,11 +31,18 @@ function createSession({ anchors }) {
   const id = crypto.randomBytes(16).toString('hex');
   const session = {
     id,
-    anchors: anchors.map(a => ({
-      provider: a.provider,
-      handle: a.handle.toLowerCase().trim(),
-      profile: null,
-    })),
+    anchors: anchors.map(a => {
+      const type = getProviderType(a.provider);
+      return {
+        provider: a.provider,
+        handle: a.handle.toLowerCase().trim(),
+        type,
+        profile: null,
+        pin: null,         // 6-digit PIN for SMS/email in multi-anchor sessions
+        pinVerified: false, // whether the PIN has been verified
+        codeSent: false,    // whether verification code/words have been sent
+      };
+    }),
     state: 'PENDING', // PENDING → PARTIAL → MATCHED → CONFIRMED
     candidateWords: [],
     selectedWords: [],
@@ -187,6 +206,54 @@ function findSessionByPresenter(handle, provider) {
   return null;
 }
 
+// Verify a PIN for an SMS/email anchor — if correct, auto-matches that anchor
+function verifyPin(id, provider, pin) {
+  const session = getSession(id);
+  if (!session) return { error: 'session_not_found' };
+
+  const anchor = session.anchors.find(a => a.provider === provider && !a.pinVerified);
+  if (!anchor) return { error: 'anchor_not_found' };
+  if (anchor.pin !== pin) return { error: 'invalid_pin' };
+
+  anchor.pinVerified = true;
+
+  // Build a synthetic profile for the SMS/email anchor
+  const profile = {
+    sub: anchor.handle,
+    name: anchor.handle,
+    email: anchor.type === 'email' ? anchor.handle : null,
+    phone: anchor.type === 'sms' ? anchor.handle : null,
+    picture: null,
+    provider: anchor.provider,
+  };
+
+  return { session: matchAnchor(id, provider, profile) };
+}
+
+// Mark that a verification code has been sent for an anchor
+function markCodeSent(id, provider) {
+  const session = getSession(id);
+  if (!session) return null;
+  const anchor = session.anchors.find(a => a.provider === provider);
+  if (anchor) anchor.codeSent = true;
+  return session;
+}
+
+// Set a PIN on an anchor (for multi-anchor SMS/email)
+function setAnchorPin(id, provider, pin) {
+  const session = getSession(id);
+  if (!session) return null;
+  const anchor = session.anchors.find(a => a.provider === provider);
+  if (anchor) anchor.pin = pin;
+  return session;
+}
+
+// Check if session is a sole messaging (SMS/email only) session
+function isSoleMessagingSession(session) {
+  return session.anchors.length === 1 &&
+    ['sms', 'email'].includes(session.anchors[0].type);
+}
+
 module.exports = {
   createSession,
   getSession,
@@ -200,4 +267,9 @@ module.exports = {
   addPresenterPollListener,
   removePresenterPollListener,
   findSessionByPresenter,
+  generatePin,
+  verifyPin,
+  markCodeSent,
+  setAnchorPin,
+  isSoleMessagingSession,
 };

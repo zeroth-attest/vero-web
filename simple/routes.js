@@ -72,7 +72,52 @@ router.post('/session/:id/words', (req, res) => {
   }
 
   store.setSelectedWords(session.id, words);
-  res.json({ ok: true });
+
+  // For SMS/email anchors, prepare client-side delivery info
+  // (the verifier's browser will open sms: or mailto: to send the message)
+  const messagingAnchors = session.anchors.filter(a => ['sms', 'email'].includes(a.type));
+  const messaging = [];
+  if (messagingAnchors.length > 0) {
+    const isSole = store.isSoleMessagingSession(session);
+
+    for (const anchor of messagingAnchors) {
+      if (isSole) {
+        // Sole SMS/email: verifier sends the 3 words directly
+        messaging.push({
+          provider: anchor.provider,
+          type: anchor.type,
+          handle: anchor.handle,
+          mode: 'words',
+          words,
+        });
+        // Auto-match with a synthetic profile (words are the verification)
+        const profile = {
+          sub: anchor.handle,
+          name: anchor.handle,
+          email: anchor.type === 'email' ? anchor.handle : null,
+          phone: anchor.type === 'sms' ? anchor.handle : null,
+          picture: null,
+          provider: anchor.provider,
+        };
+        store.matchAnchor(session.id, anchor.provider, profile);
+        store.markCodeSent(session.id, anchor.provider);
+      } else {
+        // Multi-anchor: generate a PIN for the verifier to send
+        const pin = store.generatePin();
+        store.setAnchorPin(session.id, anchor.provider, pin);
+        store.markCodeSent(session.id, anchor.provider);
+        messaging.push({
+          provider: anchor.provider,
+          type: anchor.type,
+          handle: anchor.handle,
+          mode: 'pin',
+          pin,
+        });
+      }
+    }
+  }
+
+  res.json({ ok: true, messaging });
 });
 
 // Shape profile for client (exclude sub, include all enriched fields)
@@ -147,7 +192,10 @@ router.get('/session/:id/result', (req, res) => {
 
   const anchors = session.anchors.map(a => ({
     provider: a.provider,
+    type: a.type,
     completed: !!a.profile,
+    pinRequired: a.type !== 'oauth' && !!a.pin && !a.pinVerified,
+    codeSent: a.codeSent,
     profile: a.profile ? shapeProfileForClient(a.profile) : null,
   }));
 
@@ -196,6 +244,63 @@ router.post('/session/:id/reject', (req, res) => {
   res.json({ ok: true, state: 'REJECTED' });
 });
 
+// POST /api/simple/session/:id/verify-pin — Presenter verifies PIN for SMS/email anchor
+router.post('/session/:id/verify-pin', (req, res) => {
+  const { provider, pin } = req.body;
+  if (!provider || !pin) {
+    return res.status(400).json({ error: 'provider and pin are required' });
+  }
+
+  const result = store.verifyPin(req.params.id, provider, pin);
+  if (result.error === 'session_not_found') {
+    return res.status(404).json({ error: 'Session not found or expired' });
+  }
+  if (result.error === 'anchor_not_found') {
+    return res.status(400).json({ error: 'No pending PIN verification for this provider' });
+  }
+  if (result.error === 'invalid_pin') {
+    return res.status(400).json({ error: 'Invalid PIN. Please try again.' });
+  }
+
+  const session = result.session;
+  res.json({ ok: true, state: session.state });
+});
+
+// POST /api/simple/session/:id/resend — Regenerate PIN for SMS/email anchor (client sends it)
+router.post('/session/:id/resend', (req, res) => {
+  const { provider } = req.body;
+  if (!provider) {
+    return res.status(400).json({ error: 'provider is required' });
+  }
+
+  const session = store.getSession(req.params.id);
+  if (!session) {
+    return res.status(404).json({ error: 'Session not found or expired' });
+  }
+
+  const anchor = session.anchors.find(a => a.provider === provider);
+  if (!anchor || !['sms', 'email'].includes(anchor.type)) {
+    return res.status(400).json({ error: 'Not a messaging anchor' });
+  }
+
+  const isSole = store.isSoleMessagingSession(session);
+  if (isSole) {
+    // Words don't change — just return them for the client to resend
+    res.json({
+      ok: true,
+      messaging: { type: anchor.type, handle: anchor.handle, mode: 'words', words: session.selectedWords },
+    });
+  } else {
+    // Regenerate PIN
+    const pin = store.generatePin();
+    store.setAnchorPin(session.id, anchor.provider, pin);
+    res.json({
+      ok: true,
+      messaging: { type: anchor.type, handle: anchor.handle, mode: 'pin', pin },
+    });
+  }
+});
+
 // GET /api/simple/session/:id/presenter-poll — SSE for presenter to wait for confirmation
 router.get('/session/:id/presenter-poll', (req, res) => {
   const session = store.getSession(req.params.id);
@@ -238,10 +343,13 @@ router.post('/session/lookup', (req, res) => {
     return res.status(404).json({ error: 'No pending session found for this identity. Ask the verifier to start one first.' });
   }
 
-  // Return anchors status (provider + completed flag; no handles for privacy)
+  // Return anchors status (provider + type + completed flag; no handles for privacy)
   const anchors = session.anchors.map(a => ({
     provider: a.provider,
+    type: a.type,
     completed: !!a.profile,
+    pinRequired: a.type !== 'oauth' && !!a.pin && !a.pinVerified,
+    codeSent: a.codeSent,
   }));
 
   res.json({ sessionId: session.id, anchors });
@@ -263,6 +371,12 @@ router.get('/auth/:provider/start', (req, res) => {
   const session = store.getSession(sessionId);
   if (!session) {
     return res.status(404).json({ error: 'Session not found or expired' });
+  }
+
+  // Non-OAuth providers (SMS, email) don't have authorization URLs
+  const meta = oauth.PROVIDER_META[provider];
+  if (meta && meta.type !== 'oauth') {
+    return res.status(400).json({ error: `${provider} uses ${meta.type} verification, not OAuth` });
   }
 
   const authUrl = oauth.getAuthorizationUrl(provider, sessionId, req);

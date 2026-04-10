@@ -37,6 +37,37 @@ body {
   flex-direction: column;
 }
 
+/* Sticky header */
+.sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 12px 24px;
+  z-index: 100;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.4s ease;
+  pointer-events: none;
+}
+
+.sticky-header.visible {
+  opacity: 1;
+  transform: translateY(0);
+  border-bottom-color: var(--card-border);
+  pointer-events: auto;
+}
+
+.sticky-logo {
+  width: 100px;
+  height: auto;
+  display: block;
+}
+
 /* Header */
 .header {
   text-align: center;
@@ -47,6 +78,11 @@ body {
   width: 160px;
   height: auto;
   margin-bottom: 8px;
+  transition: opacity 0.4s ease;
+}
+
+.header img.faded {
+  opacity: 0;
 }
 
 .header .subtitle {
@@ -163,6 +199,55 @@ body {
   background: #1a1a1a;
 }
 
+.btn-discord {
+  background: #5865F2;
+}
+
+.btn-discord:hover {
+  background: #4752c4;
+}
+
+.btn-tiktok {
+  background: #010101;
+  border: 1px solid #555;
+}
+
+.btn-tiktok:hover {
+  background: #1a1a1a;
+}
+
+.btn-instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.btn-instagram:hover {
+  opacity: 0.9;
+}
+
+.btn-youtube {
+  background: #FF0000;
+}
+
+.btn-youtube:hover {
+  background: #cc0000;
+}
+
+.btn-sms {
+  background: #1a7a3a;
+}
+
+.btn-sms:hover {
+  background: #156830;
+}
+
+.btn-email {
+  background: #2a6fb5;
+}
+
+.btn-email:hover {
+  background: #225d99;
+}
+
 .btn-outline {
   background: transparent;
   border: 1px solid var(--card-border);
@@ -196,7 +281,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 20px;
+  margin-bottom: 16px;
 }
 
 .role-btn {
@@ -204,7 +289,7 @@ body {
   align-items: center;
   gap: 16px;
   background: var(--card-bg);
-  border: 1px solid var(--card-border);
+  border: 2px solid var(--primary-color);
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
@@ -212,11 +297,18 @@ body {
   text-align: left;
   color: var(--text-color);
   font-family: inherit;
+  width: 100%;
+  box-shadow: 0 0 12px rgba(51, 153, 255, 0.08);
 }
 
 .role-btn:hover {
-  border-color: var(--primary-color);
-  background: rgba(51, 153, 255, 0.05);
+  background: rgba(51, 153, 255, 0.1);
+  box-shadow: 0 0 20px rgba(51, 153, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.role-btn:active {
+  transform: translateY(0);
 }
 
 .role-icon {
@@ -233,6 +325,14 @@ body {
   color: var(--text-muted);
   font-size: 13px;
   margin: 0;
+}
+
+.role-chevron {
+  margin-left: auto;
+  font-size: 24px;
+  color: var(--primary-color);
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 /* Form inputs */
@@ -269,11 +369,18 @@ body {
   color: #555;
 }
 
-/* Provider grid (6 providers in a 3x2 grid) */
+/* Provider grid (12 providers in a 3-column grid) */
 .provider-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  margin-bottom: 8px;
+}
+
+.provider-grid-messaging {
+  grid-template-columns: repeat(2, 1fr);
+  border-top: 1px solid var(--card-border);
+  padding-top: 8px;
   margin-bottom: 16px;
 }
 
@@ -320,7 +427,9 @@ body {
 }
 
 .provider-logo-item {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 500;
@@ -396,7 +505,7 @@ body {
 /* Waiting / loading states */
 .waiting {
   text-align: center;
-  padding: 40px 0;
+  padding: 24px 0 12px;
 }
 
 .spinner {
@@ -548,6 +657,47 @@ body {
 }
 
 /* Instructions callout */
+/* Share options on waiting screen */
+.share-options {
+  background: rgba(51, 153, 255, 0.08);
+  border: 1px solid rgba(51, 153, 255, 0.2);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 8px 0 16px;
+  font-size: 14px;
+}
+
+.share-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.btn-copy-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary-color);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.btn-copy-link:hover {
+  opacity: 0.7;
+}
+
+.share-or {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .callout {
   background: rgba(51, 153, 255, 0.08);
   border: 1px solid rgba(51, 153, 255, 0.2);
@@ -590,6 +740,13 @@ body {
 
 .footer a:hover {
   color: var(--text-color);
+}
+
+.footer .footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 8px;
 }
 
 /* Modal overlay */
@@ -800,6 +957,133 @@ body {
 /* Multiple profile cards spacing */
 .profile-card + .profile-card {
   margin-top: 12px;
+}
+
+/* Security warning (for SMS/email providers) */
+.security-warning {
+  display: flex;
+  gap: 10px;
+  background: rgba(240, 173, 78, 0.1);
+  border: 1px solid rgba(240, 173, 78, 0.3);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.security-warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+  color: #f0ad4e;
+}
+
+.security-warning-text strong {
+  display: block;
+  font-size: 13px;
+  color: #f0ad4e;
+  margin-bottom: 4px;
+}
+
+.security-warning-text p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* PIN entry (presenter SMS/email verification) */
+.pin-entry-group {
+  background: #222;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 8px;
+}
+
+.pin-entry-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: var(--text-color);
+}
+
+.pin-entry-label .btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.pin-entry-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pin-input {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 20px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 6px;
+  text-align: center;
+  background: var(--background-color);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.pin-input:focus {
+  border-color: var(--primary-color);
+}
+
+.pin-input::placeholder {
+  color: #444;
+  letter-spacing: 6px;
+}
+
+.pin-submit {
+  width: auto;
+  padding: 12px 20px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.pin-entry-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  min-height: 20px;
+}
+
+.pin-error {
+  font-size: 12px;
+  color: var(--error-color);
+}
+
+.pin-resend {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+}
+
+.pin-resend:hover {
+  text-decoration: underline;
+}
+
+.pin-resend:disabled {
+  color: var(--text-muted);
+  cursor: default;
+  text-decoration: none;
 }
 
 /* Responsive */

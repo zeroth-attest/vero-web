@@ -5,12 +5,18 @@ const jwt = require('jsonwebtoken');
 // Provider display metadata (shared with frontend)
 // ──────────────────────────────────────────────
 const PROVIDER_META = {
-  google:    { label: 'Google',    icon: 'google',    handleLabel: 'Gmail address',                handlePlaceholder: 'name@gmail.com' },
-  linkedin:  { label: 'LinkedIn',  icon: 'linkedin',  handleLabel: 'LinkedIn profile URL or email', handlePlaceholder: 'linkedin.com/in/jane-doe or name@email.com' },
-  github:    { label: 'GitHub',    icon: 'github',    handleLabel: 'GitHub username or email',     handlePlaceholder: 'octocat or name@email.com' },
-  microsoft: { label: 'Microsoft', icon: 'microsoft', handleLabel: 'Microsoft / Outlook email',    handlePlaceholder: 'name@outlook.com' },
-  facebook:  { label: 'Facebook',  icon: 'facebook',  handleLabel: 'Facebook email',               handlePlaceholder: 'name@email.com' },
-  apple:     { label: 'Apple',     icon: 'apple',     handleLabel: 'Apple ID email',               handlePlaceholder: 'name@icloud.com' },
+  google:    { label: 'Google',    icon: 'google',    type: 'oauth', handleLabel: 'Gmail address', handlePlaceholder: 'name@gmail.com' },
+  linkedin:  { label: 'LinkedIn',  icon: 'linkedin',  type: 'oauth', handleLabel: 'LinkedIn profile URL or email', handlePlaceholder: 'linkedin.com/in/jane-doe or name@email.com' },
+  github:    { label: 'GitHub',    icon: 'github',    type: 'oauth', handleLabel: 'GitHub username or email', handlePlaceholder: 'octocat or name@email.com' },
+  microsoft: { label: 'Microsoft', icon: 'microsoft', type: 'oauth', handleLabel: 'Microsoft / Outlook email', handlePlaceholder: 'name@outlook.com' },
+  facebook:  { label: 'Facebook',  icon: 'facebook',  type: 'oauth', handleLabel: 'Facebook email', handlePlaceholder: 'name@email.com' },
+  apple:     { label: 'Apple',     icon: 'apple',     type: 'oauth', handleLabel: 'Apple ID email', handlePlaceholder: 'name@icloud.com' },
+  discord:   { label: 'Discord',   icon: 'discord',   type: 'oauth', handleLabel: 'Discord username or email', handlePlaceholder: 'username or name@email.com' },
+  tiktok:    { label: 'TikTok',    icon: 'tiktok',    type: 'oauth', handleLabel: 'TikTok username', handlePlaceholder: '@username' },
+  instagram: { label: 'Instagram', icon: 'instagram',  type: 'oauth', handleLabel: 'Instagram username', handlePlaceholder: '@username' },
+  youtube:   { label: 'YouTube',   icon: 'youtube',   type: 'oauth', handleLabel: 'YouTube channel URL or email', handlePlaceholder: 'youtube.com/@handle or name@gmail.com' },
+  sms:       { label: 'SMS',       icon: 'sms',       type: 'sms',   handleLabel: 'Their phone number', handlePlaceholder: '+1 (555) 123-4567', securityLevel: 'low' },
+  email:     { label: 'Email',     icon: 'email',     type: 'email', handleLabel: 'Their email address', handlePlaceholder: 'name@example.com', securityLevel: 'low' },
 };
 
 const VALID_PROVIDERS = Object.keys(PROVIDER_META);
@@ -68,6 +74,35 @@ const providers = {
     // Apple uses a JWT client secret — generated on the fly
     clientSecret: () => generateAppleClientSecret(),
   },
+  discord: {
+    authUrl: 'https://discord.com/api/oauth2/authorize',
+    tokenUrl: 'https://discord.com/api/oauth2/token',
+    userinfoUrl: 'https://discord.com/api/users/@me',
+    scopes: 'identify email',
+    clientId: () => process.env.DISCORD_CLIENT_ID,
+    clientSecret: () => process.env.DISCORD_CLIENT_SECRET,
+  },
+  tiktok: {
+    authUrl: 'https://www.tiktok.com/v2/auth/authorize/',
+    tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
+    scopes: 'user.info.basic,user.info.profile',
+    clientId: () => process.env.TIKTOK_CLIENT_KEY,
+    clientSecret: () => process.env.TIKTOK_CLIENT_SECRET,
+  },
+  instagram: {
+    authUrl: 'https://api.instagram.com/oauth/authorize',
+    tokenUrl: 'https://api.instagram.com/oauth/access_token',
+    scopes: 'user_profile',
+    clientId: () => process.env.INSTAGRAM_CLIENT_ID,
+    clientSecret: () => process.env.INSTAGRAM_CLIENT_SECRET,
+  },
+  youtube: {
+    authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    scopes: 'https://www.googleapis.com/auth/youtube.readonly',
+    clientId: () => process.env.GOOGLE_CLIENT_ID,
+    clientSecret: () => process.env.GOOGLE_CLIENT_SECRET,
+  },
 };
 
 // ──────────────────────────────────────────────
@@ -124,7 +159,13 @@ function getBaseUrlFromRequest(req) {
 
 function getAuthorizationUrl(provider, sessionId, req) {
   const config = providers[provider];
-  if (!config) throw new Error(`Unknown provider: ${provider}`);
+  // Non-OAuth providers don't have authorization URLs
+  if (!config) {
+    if (['sms', 'email'].includes(provider)) {
+      throw new Error(`${provider} does not use OAuth — use the PIN verification flow`);
+    }
+    throw new Error(`Unknown provider: ${provider}`);
+  }
 
   const baseUrl = getBaseUrlFromRequest(req);
 
@@ -154,6 +195,16 @@ function getAuthorizationUrl(provider, sessionId, req) {
   // Apple-specific: use form_post so callback receives a POST
   if (provider === 'apple') {
     params.set('response_mode', 'form_post');
+  }
+
+  // TikTok uses client_key instead of client_id
+  if (provider === 'tiktok') {
+    params.delete('client_id');
+    params.set('client_key', config.clientId());
+  }
+
+  if (provider === 'discord') {
+    params.set('prompt', 'consent');
   }
 
   return `${config.authUrl}?${params.toString()}`;
@@ -202,6 +253,14 @@ async function exchangeCodeForProfile(provider, code, extras = {}, baseUrl = nul
       return extractMicrosoftProfile(tokens);
     case 'facebook':
       return extractFacebookProfile(tokens);
+    case 'discord':
+      return extractDiscordProfile(tokens);
+    case 'tiktok':
+      return extractTikTokProfile(tokens);
+    case 'instagram':
+      return extractInstagramProfile(tokens);
+    case 'youtube':
+      return extractYouTubeProfile(tokens);
     default:
       // Google, LinkedIn — standard OIDC userinfo
       return extractStandardProfile(provider, tokens);
@@ -349,6 +408,77 @@ function extractAppleProfile(tokens, extras) {
     picture: null, // Apple never provides a profile photo
     email_verified: decoded.email_verified || null,
     provider: 'apple',
+  };
+}
+
+async function extractDiscordProfile(tokens) {
+  const profileRes = await fetch('https://discord.com/api/users/@me', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  if (!profileRes.ok) throw new Error('Failed to fetch Discord profile');
+  const profile = await profileRes.json();
+  const avatarUrl = profile.avatar
+    ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+    : null;
+  return {
+    sub: profile.id,
+    name: profile.global_name || profile.username,
+    email: profile.email || null,
+    email_verified: profile.verified || null,
+    picture: avatarUrl,
+    username: profile.username,
+    provider: 'discord',
+  };
+}
+
+async function extractTikTokProfile(tokens) {
+  const profileRes = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name,username', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  if (!profileRes.ok) throw new Error('Failed to fetch TikTok profile');
+  const data = await profileRes.json();
+  const user = data.data && data.data.user ? data.data.user : {};
+  return {
+    sub: user.open_id || user.union_id,
+    name: user.display_name || user.username,
+    email: null,
+    picture: user.avatar_url || null,
+    username: user.username || null,
+    provider: 'tiktok',
+  };
+}
+
+async function extractInstagramProfile(tokens) {
+  const profileRes = await fetch(
+    `https://graph.instagram.com/me?fields=id,username&access_token=${tokens.access_token}`
+  );
+  if (!profileRes.ok) throw new Error('Failed to fetch Instagram profile');
+  const profile = await profileRes.json();
+  return {
+    sub: profile.id,
+    name: profile.username,
+    email: null,
+    picture: null,
+    username: profile.username,
+    provider: 'instagram',
+  };
+}
+
+async function extractYouTubeProfile(tokens) {
+  const profileRes = await fetch(
+    'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+    { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+  );
+  if (!profileRes.ok) throw new Error('Failed to fetch YouTube profile');
+  const data = await profileRes.json();
+  const channel = data.items && data.items[0] ? data.items[0].snippet : {};
+  return {
+    sub: data.items && data.items[0] ? data.items[0].id : null,
+    name: channel.title || 'YouTube User',
+    email: null,
+    picture: channel.thumbnails && channel.thumbnails.default ? channel.thumbnails.default.url : null,
+    profileUrl: data.items && data.items[0] ? `https://youtube.com/channel/${data.items[0].id}` : null,
+    provider: 'youtube',
   };
 }
 
