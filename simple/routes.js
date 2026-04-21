@@ -3,6 +3,7 @@ const router = express.Router();
 const { getRandomWords } = require('./wordlist');
 const store = require('./session-store');
 const oauth = require('./oauth');
+const stats = require('./stats-logger');
 
 // Parse URL-encoded bodies (needed for Apple's form_post callback)
 router.use(express.urlencoded({ extended: true }));
@@ -42,7 +43,7 @@ router.post('/session', (req, res) => {
     return res.status(400).json({ error: 'Each provider can only be used once per session' });
   }
 
-  const session = store.createSession({ anchors: sessionAnchors });
+  const session = store.createSession({ anchors: sessionAnchors, source: stats.classifySource(req) });
   const candidateWords = getRandomWords(10);
   store.setCandidateWords(session.id, candidateWords);
 
@@ -101,11 +102,13 @@ router.post('/session/:id/words', (req, res) => {
         };
         store.matchAnchor(session.id, anchor.provider, profile);
         store.markCodeSent(session.id, anchor.provider);
+        stats.recordCodeSent({ sessionId: session.id, provider: anchor.provider, providerType: anchor.type, isResend: false });
       } else {
         // Multi-anchor: generate a PIN for the verifier to send
         const pin = store.generatePin();
         store.setAnchorPin(session.id, anchor.provider, pin);
         store.markCodeSent(session.id, anchor.provider);
+        stats.recordCodeSent({ sessionId: session.id, provider: anchor.provider, providerType: anchor.type, isResend: false });
         messaging.push({
           provider: anchor.provider,
           type: anchor.type,
@@ -284,6 +287,7 @@ router.post('/session/:id/resend', (req, res) => {
   }
 
   const isSole = store.isSoleMessagingSession(session);
+  stats.recordCodeSent({ sessionId: session.id, provider: anchor.provider, providerType: anchor.type, isResend: true });
   if (isSole) {
     // Words don't change — just return them for the client to resend
     res.json({
@@ -472,6 +476,7 @@ async function handleOAuthCallback(req, res) {
       // Still allow the match for demo purposes — the identity was authenticated,
       // just not the expected one. In production you'd reject this.
       console.log(`Identity mismatch: expected ${anchor.handle}, got ${profile.email || profile.username || profile.sub}`);
+      stats.recordAnchorMismatch({ sessionId: session.id, provider, providerType: anchor.type });
     }
 
     store.matchAnchor(session.id, provider, profile);

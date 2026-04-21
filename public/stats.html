@@ -12,6 +12,7 @@
       --primary: #3399FF;
       --accent: #FF9933;
       --success: #22c55e;
+      --danger: #ef4444;
       --bg: #0a0a0a;
       --bg-card: #141414;
       --bg-card-hover: #1a1a1a;
@@ -45,10 +46,7 @@
     }
     h1 .accent { color: var(--primary); }
     .meta { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-    .updated {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
+    .updated { font-size: 12px; color: var(--text-dim); }
     .window-toggle {
       display: inline-flex;
       background: var(--bg-card);
@@ -67,10 +65,7 @@
       transition: background 0.15s, color 0.15s;
     }
     .window-toggle button:hover { color: var(--text); }
-    .window-toggle button.active {
-      background: var(--primary);
-      color: #fff;
-    }
+    .window-toggle button.active { background: var(--primary); color: #fff; }
     .refresh-btn {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -85,52 +80,93 @@
 
     .kpi-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
     }
-    .kpi {
+    .kpi, .card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 24px;
     }
     .kpi-label {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.3px;
       color: var(--text-dim);
       margin-bottom: 8px;
     }
     .kpi-value {
-      font-size: 36px;
+      font-size: 32px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
     .kpi-value.success { color: var(--success); }
     .kpi-value.primary { color: var(--primary); }
-    .kpi-value.danger { color: #ef4444; }
+    .kpi-value.danger { color: var(--danger); }
+    .kpi-value.dim { color: var(--text-muted); }
 
-    .chart-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .chart-card h2 {
-      font-size: 15px;
+    .card { margin-bottom: 24px; }
+    .card h2 {
+      font-size: 13px;
       font-weight: 600;
       margin-bottom: 18px;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 1.2px;
     }
-    .chart-wrap {
-      position: relative;
-      height: 340px;
+    .chart-wrap { position: relative; height: 340px; }
+    .chart-wrap.daily { height: 280px; }
+    .chart-wrap.short { height: 220px; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
     }
-    .chart-wrap.daily { height: 300px; }
+    @media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
+
+    .combo-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .combo-table td {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .combo-table tr:last-child td { border-bottom: none; }
+    .combo-table td:last-child {
+      text-align: right;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+    .chip {
+      display: inline-block;
+      background: rgba(51,153,255,0.12);
+      color: var(--primary);
+      border: 1px solid rgba(51,153,255,0.25);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      margin-right: 4px;
+      margin-bottom: 2px;
+    }
+
+    .empty {
+      color: var(--text-dim);
+      font-size: 13px;
+      text-align: center;
+      padding: 40px 0;
+    }
 
     footer {
       margin-top: 40px;
@@ -141,16 +177,8 @@
       text-align: center;
     }
 
-    .loading, .error {
-      text-align: center;
-      padding: 40px 0;
-      color: var(--text-dim);
-      font-size: 14px;
-    }
-    .error { color: #ef4444; }
-
     @media (max-width: 600px) {
-      .kpi-value { font-size: 28px; }
+      .kpi-value { font-size: 26px; }
       h1 { font-size: 18px; }
     }
   </style>
@@ -170,44 +198,100 @@
       </div>
     </header>
 
+    <!-- ── KPI row ── -->
     <div class="kpi-row">
       <div class="kpi">
         <div class="kpi-label">Sessions Created</div>
         <div class="kpi-value" id="kpi-created">—</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Sessions Confirmed</div>
+        <div class="kpi-label">Confirmed</div>
         <div class="kpi-value success" id="kpi-confirmed">—</div>
+        <div class="kpi-sub" id="kpi-confirmed-sub">—</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Sessions Rejected</div>
+        <div class="kpi-label">Rejected</div>
         <div class="kpi-value danger" id="kpi-rejected">—</div>
+        <div class="kpi-sub" id="kpi-rejected-sub">—</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Conversion Rate</div>
-        <div class="kpi-value primary" id="kpi-conversion">—</div>
+        <div class="kpi-label">Abandoned</div>
+        <div class="kpi-value dim" id="kpi-abandoned">—</div>
+        <div class="kpi-sub" id="kpi-abandoned-sub">—</div>
       </div>
     </div>
 
-    <div class="chart-card">
+    <!-- ── Timing + Signals row ── -->
+    <div class="two-col">
+      <div class="card">
+        <h2>Funnel Timing</h2>
+        <div class="kpi-row" style="margin-bottom: 0;">
+          <div>
+            <div class="kpi-label">Avg Time to Confirm</div>
+            <div class="kpi-value primary" id="timing-confirm">—</div>
+            <div class="kpi-sub" id="timing-confirm-n">—</div>
+          </div>
+          <div>
+            <div class="kpi-label">Avg Time to Reject</div>
+            <div class="kpi-value danger" id="timing-reject">—</div>
+            <div class="kpi-sub" id="timing-reject-n">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Signals</h2>
+        <div class="kpi-row" style="margin-bottom: 0;">
+          <div>
+            <div class="kpi-label">Anchor Mismatches</div>
+            <div class="kpi-value danger" id="sig-mismatch">—</div>
+            <div class="kpi-sub">expected ≠ signed-in identity</div>
+          </div>
+          <div>
+            <div class="kpi-label">Resend Rate</div>
+            <div class="kpi-value" id="sig-resend">—</div>
+            <div class="kpi-sub" id="sig-resend-sub">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Provider matches + combinations ── -->
+    <div class="card">
       <h2>Matches by Provider</h2>
       <div class="chart-wrap"><canvas id="providers-chart"></canvas></div>
     </div>
 
-    <div class="chart-card">
+    <div class="two-col">
+      <div class="card">
+        <h2>Top Provider Combinations</h2>
+        <table class="combo-table" id="combo-table">
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Anchors per Session</h2>
+        <div class="chart-wrap short"><canvas id="anchor-count-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── Sources ── -->
+    <div class="card">
+      <h2>Traffic Source</h2>
+      <div class="chart-wrap short"><canvas id="source-chart"></canvas></div>
+    </div>
+
+    <!-- ── Daily trend ── -->
+    <div class="card">
       <h2>Daily Trend (last 30 days)</h2>
       <div class="chart-wrap daily"><canvas id="daily-chart"></canvas></div>
     </div>
 
-    <footer>
-      Counts only. No personal data stored.
-    </footer>
+    <footer>Counts only. No personal data stored.</footer>
   </div>
 
   <script>
     const state = { window: 'all' };
-    let providersChart = null;
-    let dailyChart = null;
+    let providersChart = null, dailyChart = null, anchorCountChart = null, sourceChart = null;
 
     function fmtInt(n) { return new Intl.NumberFormat().format(n || 0); }
     function fmtPct(x) {
@@ -222,6 +306,15 @@
       if (s < 3600) return `${Math.floor(s/60)}m ago`;
       return `${Math.floor(s/3600)}h ago`;
     }
+    function fmtDuration(ms) {
+      if (ms == null || !isFinite(ms)) return '—';
+      if (ms < 1000) return `${ms}ms`;
+      const s = ms / 1000;
+      if (s < 60) return `${s.toFixed(1)}s`;
+      const m = s / 60;
+      if (m < 60) return `${m.toFixed(1)}m`;
+      return `${(m / 60).toFixed(1)}h`;
+    }
 
     async function fetchJSON(path) {
       const res = await fetch(path, { credentials: 'same-origin' });
@@ -233,14 +326,24 @@
       const w = state.window;
       document.getElementById('updated').textContent = 'Loading…';
       try {
-        const [summary, providers, daily] = await Promise.all([
+        const [summary, providers, daily, anchorCount, combos, sources, timing, signals] = await Promise.all([
           fetchJSON(`/api/stats/summary?window=${w}`),
           fetchJSON(`/api/stats/providers?window=${w}`),
           fetchJSON(`/api/stats/daily?days=30`),
+          fetchJSON(`/api/stats/anchor-count?window=${w}`),
+          fetchJSON(`/api/stats/combinations?window=${w}&limit=10`),
+          fetchJSON(`/api/stats/sources?window=${w}`),
+          fetchJSON(`/api/stats/timing?window=${w}`),
+          fetchJSON(`/api/stats/signals?window=${w}`),
         ]);
         renderSummary(summary);
         renderProviders(providers);
         renderDaily(daily);
+        renderAnchorCount(anchorCount);
+        renderCombos(combos);
+        renderSources(sources);
+        renderTiming(timing);
+        renderSignals(signals);
         document.getElementById('updated').textContent = `Updated ${fmtAgo(summary.generatedAt)}`;
       } catch (err) {
         document.getElementById('updated').textContent = 'Error loading stats';
@@ -251,8 +354,24 @@
     function renderSummary(s) {
       document.getElementById('kpi-created').textContent = fmtInt(s.sessionsCreated);
       document.getElementById('kpi-confirmed').textContent = fmtInt(s.sessionsConfirmed);
+      document.getElementById('kpi-confirmed-sub').textContent = `${fmtPct(s.conversionRate)} of created`;
       document.getElementById('kpi-rejected').textContent = fmtInt(s.sessionsRejected);
-      document.getElementById('kpi-conversion').textContent = fmtPct(s.conversionRate);
+      document.getElementById('kpi-rejected-sub').textContent = `${fmtPct(s.rejectionRate)} of created`;
+      document.getElementById('kpi-abandoned').textContent = fmtInt(s.sessionsAbandoned);
+      document.getElementById('kpi-abandoned-sub').textContent = `${fmtPct(s.abandonmentRate)} — timed out or closed`;
+    }
+
+    function renderTiming(t) {
+      document.getElementById('timing-confirm').textContent = fmtDuration(t.confirmed.avgMs);
+      document.getElementById('timing-confirm-n').textContent = `over ${fmtInt(t.confirmed.count)} confirmed`;
+      document.getElementById('timing-reject').textContent = fmtDuration(t.rejected.avgMs);
+      document.getElementById('timing-reject-n').textContent = `over ${fmtInt(t.rejected.count)} rejected`;
+    }
+
+    function renderSignals(s) {
+      document.getElementById('sig-mismatch').textContent = fmtInt(s.anchorMismatches);
+      document.getElementById('sig-resend').textContent = fmtPct(s.resendRate);
+      document.getElementById('sig-resend-sub').textContent = `${fmtInt(s.codeResends)} resends of ${fmtInt(s.codeSends + s.codeResends)} sends`;
     }
 
     function renderProviders(p) {
@@ -264,25 +383,16 @@
         providersChart.update();
         return;
       }
-      const ctx = document.getElementById('providers-chart');
-      providersChart = new Chart(ctx, {
+      providersChart = new Chart(document.getElementById('providers-chart'), {
         type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Matches',
-            data,
-            backgroundColor: '#3399FF',
-            borderRadius: 4,
-          }],
-        },
+        data: { labels, datasets: [{ label: 'Matches', data, backgroundColor: '#3399FF', borderRadius: 4 }] },
         options: {
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { ticks: { color: '#888' }, grid: { color: '#222' } },
+            x: { ticks: { color: '#888', precision: 0 }, grid: { color: '#222' }, beginAtZero: true },
             y: { ticks: { color: '#ccc' }, grid: { display: false } },
           },
         },
@@ -300,8 +410,7 @@
         dailyChart.update();
         return;
       }
-      const ctx = document.getElementById('daily-chart');
-      dailyChart = new Chart(ctx, {
+      dailyChart = new Chart(document.getElementById('daily-chart'), {
         type: 'line',
         data: {
           labels,
@@ -317,6 +426,66 @@
           scales: {
             x: { ticks: { color: '#888' }, grid: { color: '#1a1a1a' } },
             y: { ticks: { color: '#888', precision: 0 }, grid: { color: '#1a1a1a' }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    function renderAnchorCount(a) {
+      const labels = ['1 anchor', '2 anchors', '3+ anchors'];
+      const data = [a.buckets['1'], a.buckets['2'], a.buckets['3+']];
+      if (anchorCountChart) {
+        anchorCountChart.data.datasets[0].data = data;
+        anchorCountChart.update();
+        return;
+      }
+      anchorCountChart = new Chart(document.getElementById('anchor-count-chart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ data, backgroundColor: ['#3399FF', '#FF9933', '#22c55e'], borderRadius: 4 }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#ccc' }, grid: { display: false } },
+            y: { ticks: { color: '#888', precision: 0 }, grid: { color: '#222' }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    function renderCombos(c) {
+      const tbody = document.querySelector('#combo-table tbody');
+      if (!c.combos.length) {
+        tbody.innerHTML = '<tr><td class="empty" colspan="2">No sessions in this window yet</td></tr>';
+        return;
+      }
+      tbody.innerHTML = c.combos.map(row => {
+        const chips = row.combo.map(p => `<span class="chip">${p}</span>`).join('');
+        return `<tr><td>${chips}</td><td>${fmtInt(row.count)}</td></tr>`;
+      }).join('');
+    }
+
+    function renderSources(s) {
+      const order = ['try', 'voice_subdomain', 'video', 'direct', 'other'];
+      const labels = order.map(k => ({ try: '/try landing', voice_subdomain: 'voice.vero.technology', video: '/video', direct: 'Direct (no referer)', other: 'Other' }[k]));
+      const data = order.map(k => s.counts[k] || 0);
+      if (sourceChart) {
+        sourceChart.data.datasets[0].data = data;
+        sourceChart.update();
+        return;
+      }
+      sourceChart = new Chart(document.getElementById('source-chart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ data, backgroundColor: '#FF9933', borderRadius: 4 }] },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#888', precision: 0 }, grid: { color: '#222' }, beginAtZero: true },
+            y: { ticks: { color: '#ccc' }, grid: { display: false } },
           },
         },
       });

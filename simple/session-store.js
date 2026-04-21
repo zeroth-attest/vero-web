@@ -28,7 +28,7 @@ setInterval(() => {
   }
 }, CLEANUP_INTERVAL_MS);
 
-function createSession({ anchors }) {
+function createSession({ anchors, source }) {
   const id = crypto.randomBytes(16).toString('hex');
   const session = {
     id,
@@ -52,7 +52,7 @@ function createSession({ anchors }) {
     presenterPollListeners: [], // SSE response objects for presenter waiting for confirmation
   };
   sessions.set(id, session);
-  stats.recordSessionCreated({ sessionId: id, providers: anchors.map(a => a.provider) });
+  stats.recordSessionCreated({ sessionId: id, providers: anchors.map(a => a.provider), source });
   return session;
 }
 
@@ -89,9 +89,15 @@ function matchAnchor(id, provider, profile) {
   if (!anchor) return null;
 
   anchor.profile = profile;
-  stats.recordAnchorMatched({ sessionId: id, provider, providerType: anchor.type });
-
   const completedCount = session.anchors.filter(a => a.profile !== null).length;
+  stats.recordAnchorMatched({
+    sessionId: id,
+    provider,
+    providerType: anchor.type,
+    elapsedMs: Date.now() - session.createdAt,
+    matchIndex: completedCount,
+  });
+
   const totalCount = session.anchors.length;
   const allMatched = completedCount === totalCount;
 
@@ -149,7 +155,7 @@ function confirmSession(id) {
   if (session.state !== 'MATCHED') return null;
 
   session.state = 'CONFIRMED';
-  stats.recordSessionConfirmed({ sessionId: id });
+  stats.recordSessionConfirmed({ sessionId: id, elapsedMs: Date.now() - session.createdAt });
 
   // Notify all presenter poll listeners that verification is confirmed
   for (const listener of session.presenterPollListeners) {
@@ -169,7 +175,7 @@ function rejectSession(id) {
   if (session.state !== 'MATCHED') return null;
 
   session.state = 'REJECTED';
-  stats.recordSessionRejected({ sessionId: id });
+  stats.recordSessionRejected({ sessionId: id, elapsedMs: Date.now() - session.createdAt });
 
   // Notify all presenter poll listeners that verification was rejected
   for (const listener of session.presenterPollListeners) {

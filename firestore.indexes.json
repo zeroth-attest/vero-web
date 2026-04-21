@@ -24,6 +24,15 @@
         { "fieldPath": "provider", "order": "ASCENDING" },
         { "fieldPath": "ts", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "stats_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "isResend", "order": "ASCENDING" },
+        { "fieldPath": "ts", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
