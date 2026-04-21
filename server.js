@@ -7,6 +7,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const simpleRoutes = require('./simple/routes');
+const statsRoutes = require('./simple/stats-routes');
+const { statsBasicAuth } = require('./simple/stats-auth');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -30,6 +32,12 @@ app.use('/assets', (req, res, next) => {
 
 // ── API routes (available on all domains) ──
 app.use('/api/simple', simpleRoutes);
+
+// Stats API + dashboard (basic-auth gated; health endpoint is public inside router)
+app.use('/api/stats', statsBasicAuth, statsRoutes);
+app.get('/stats', statsBasicAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'stats.html'));
+});
 
 // ── Hostname-based routing ──
 // Subdomains serve their respective apps at root.

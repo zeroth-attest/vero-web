@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const stats = require('./stats-logger');
 
 const SESSION_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const CLEANUP_INTERVAL_MS = 60 * 1000; // Check every minute
@@ -51,6 +52,7 @@ function createSession({ anchors }) {
     presenterPollListeners: [], // SSE response objects for presenter waiting for confirmation
   };
   sessions.set(id, session);
+  stats.recordSessionCreated({ sessionId: id, providers: anchors.map(a => a.provider) });
   return session;
 }
 
@@ -87,6 +89,7 @@ function matchAnchor(id, provider, profile) {
   if (!anchor) return null;
 
   anchor.profile = profile;
+  stats.recordAnchorMatched({ sessionId: id, provider, providerType: anchor.type });
 
   const completedCount = session.anchors.filter(a => a.profile !== null).length;
   const totalCount = session.anchors.length;
@@ -146,6 +149,7 @@ function confirmSession(id) {
   if (session.state !== 'MATCHED') return null;
 
   session.state = 'CONFIRMED';
+  stats.recordSessionConfirmed({ sessionId: id });
 
   // Notify all presenter poll listeners that verification is confirmed
   for (const listener of session.presenterPollListeners) {

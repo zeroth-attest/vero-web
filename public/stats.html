@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vero Voice — Usage Stats</title>
+  <link rel="icon" href="/assets/zeroth-0-favicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #3399FF;
+      --accent: #FF9933;
+      --success: #22c55e;
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --bg-card-hover: #1a1a1a;
+      --text: #ffffff;
+      --text-muted: #999;
+      --text-dim: #666;
+      --border: #222;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 20px 80px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+    h1 .accent { color: var(--primary); }
+    .meta { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    .updated {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .window-toggle {
+      display: inline-flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .window-toggle button {
+      background: transparent;
+      border: 0;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .window-toggle button:hover { color: var(--text); }
+    .window-toggle button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .refresh-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .refresh-btn:hover { color: var(--text); border-color: var(--primary); }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .kpi {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .kpi-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 36px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .kpi-value.success { color: var(--success); }
+    .kpi-value.primary { color: var(--primary); }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .chart-card h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 340px;
+    }
+    .chart-wrap.daily { height: 300px; }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .loading, .error {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+    .error { color: #ef4444; }
+
+    @media (max-width: 600px) {
+      .kpi-value { font-size: 28px; }
+      h1 { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Vero Voice <span class="accent">·</span> Usage Stats</h1>
+      <div class="meta">
+        <span class="updated" id="updated">Loading…</span>
+        <div class="window-toggle" role="group" aria-label="Time window">
+          <button data-window="all" class="active">All time</button>
+          <button data-window="7d">7 days</button>
+          <button data-window="24h">24 hours</button>
+        </div>
+        <button class="refresh-btn" id="refresh">Refresh</button>
+      </div>
+    </header>
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Sessions Created</div>
+        <div class="kpi-value" id="kpi-created">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Sessions Confirmed</div>
+        <div class="kpi-value success" id="kpi-confirmed">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Conversion Rate</div>
+        <div class="kpi-value primary" id="kpi-conversion">—</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Matches by Provider</h2>
+      <div class="chart-wrap"><canvas id="providers-chart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Daily Trend (last 30 days)</h2>
+      <div class="chart-wrap daily"><canvas id="daily-chart"></canvas></div>
+    </div>
+
+    <footer>
+      Counts only. No personal data stored.
+    </footer>
+  </div>
+
+  <script>
+    const state = { window: 'all' };
+    let providersChart = null;
+    let dailyChart = null;
+
+    function fmtInt(n) { return new Intl.NumberFormat().format(n || 0); }
+    function fmtPct(x) {
+      if (!isFinite(x) || x <= 0) return '0%';
+      return (x * 100).toFixed(x < 0.1 ? 1 : 0) + '%';
+    }
+    function fmtAgo(iso) {
+      if (!iso) return '';
+      const ms = Date.now() - new Date(iso).getTime();
+      const s = Math.max(0, Math.round(ms / 1000));
+      if (s < 60) return `${s}s ago`;
+      if (s < 3600) return `${Math.floor(s/60)}m ago`;
+      return `${Math.floor(s/3600)}h ago`;
+    }
+
+    async function fetchJSON(path) {
+      const res = await fetch(path, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`${path} returned ${res.status}`);
+      return res.json();
+    }
+
+    async function loadAll() {
+      const w = state.window;
+      document.getElementById('updated').textContent = 'Loading…';
+      try {
+        const [summary, providers, daily] = await Promise.all([
+          fetchJSON(`/api/stats/summary?window=${w}`),
+          fetchJSON(`/api/stats/providers?window=${w}`),
+          fetchJSON(`/api/stats/daily?days=30`),
+        ]);
+        renderSummary(summary);
+        renderProviders(providers);
+        renderDaily(daily);
+        document.getElementById('updated').textContent = `Updated ${fmtAgo(summary.generatedAt)}`;
+      } catch (err) {
+        document.getElementById('updated').textContent = 'Error loading stats';
+        console.error(err);
+      }
+    }
+
+    function renderSummary(s) {
+      document.getElementById('kpi-created').textContent = fmtInt(s.sessionsCreated);
+      document.getElementById('kpi-confirmed').textContent = fmtInt(s.sessionsConfirmed);
+      document.getElementById('kpi-conversion').textContent = fmtPct(s.conversionRate);
+    }
+
+    function renderProviders(p) {
+      const labels = p.providers.map(x => x.provider);
+      const data = p.providers.map(x => x.matches);
+      if (providersChart) {
+        providersChart.data.labels = labels;
+        providersChart.data.datasets[0].data = data;
+        providersChart.update();
+        return;
+      }
+      const ctx = document.getElementById('providers-chart');
+      providersChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Matches',
+            data,
+            backgroundColor: '#3399FF',
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#888' }, grid: { color: '#222' } },
+            y: { ticks: { color: '#ccc' }, grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    function renderDaily(d) {
+      const labels = d.buckets.map(b => b.date.slice(5));
+      const created = d.buckets.map(b => b.created);
+      const confirmed = d.buckets.map(b => b.confirmed);
+      if (dailyChart) {
+        dailyChart.data.labels = labels;
+        dailyChart.data.datasets[0].data = created;
+        dailyChart.data.datasets[1].data = confirmed;
+        dailyChart.update();
+        return;
+      }
+      const ctx = document.getElementById('daily-chart');
+      dailyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Created', data: created, borderColor: '#3399FF', backgroundColor: 'rgba(51,153,255,0.1)', tension: 0.25, fill: true },
+            { label: 'Confirmed', data: confirmed, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.08)', tension: 0.25, fill: true },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#ccc' } } },
+          scales: {
+            x: { ticks: { color: '#888' }, grid: { color: '#1a1a1a' } },
+            y: { ticks: { color: '#888', precision: 0 }, grid: { color: '#1a1a1a' }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    document.querySelectorAll('.window-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.window-toggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.window = btn.dataset.window;
+        loadAll();
+      });
+    });
+    document.getElementById('refresh').addEventListener('click', loadAll);
+
+    loadAll();
+    setInterval(loadAll, 60000);
+  </script>
+</body>
+</html>
