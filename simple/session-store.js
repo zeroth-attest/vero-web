@@ -169,6 +169,7 @@ function rejectSession(id) {
   if (session.state !== 'MATCHED') return null;
 
   session.state = 'REJECTED';
+  stats.recordSessionRejected({ sessionId: id });
 
   // Notify all presenter poll listeners that verification was rejected
   for (const listener of session.presenterPollListeners) {

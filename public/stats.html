@@ -109,6 +109,7 @@
     }
     .kpi-value.success { color: var(--success); }
     .kpi-value.primary { color: var(--primary); }
+    .kpi-value.danger { color: #ef4444; }
 
     .chart-card {
       background: var(--bg-card);
@@ -179,6 +180,10 @@
         <div class="kpi-value success" id="kpi-confirmed">—</div>
       </div>
       <div class="kpi">
+        <div class="kpi-label">Sessions Rejected</div>
+        <div class="kpi-value danger" id="kpi-rejected">—</div>
+      </div>
+      <div class="kpi">
         <div class="kpi-label">Conversion Rate</div>
         <div class="kpi-value primary" id="kpi-conversion">—</div>
       </div>
@@ -246,6 +251,7 @@
     function renderSummary(s) {
       document.getElementById('kpi-created').textContent = fmtInt(s.sessionsCreated);
       document.getElementById('kpi-confirmed').textContent = fmtInt(s.sessionsConfirmed);
+      document.getElementById('kpi-rejected').textContent = fmtInt(s.sessionsRejected);
       document.getElementById('kpi-conversion').textContent = fmtPct(s.conversionRate);
     }
 

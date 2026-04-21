@@ -14,7 +14,7 @@
 const { Firestore, FieldValue } = require('@google-cloud/firestore');
 
 const COLLECTION = 'stats_events';
-const VALID_TYPES = new Set(['session_created', 'anchor_matched', 'session_confirmed']);
+const VALID_TYPES = new Set(['session_created', 'anchor_matched', 'session_confirmed', 'session_rejected']);
 const VALID_PROVIDER_TYPES = new Set(['oauth', 'sms', 'email']);
 
 let db = null;
@@ -88,6 +88,18 @@ function recordSessionConfirmed({ sessionId }) {
   });
 }
 
+function recordSessionRejected({ sessionId }) {
+  return write({
+    type: 'session_rejected',
+    sessionId: String(sessionId || ''),
+    provider: null,
+    providerType: null,
+    providers: null,
+    ts: FieldValue.serverTimestamp(),
+    day: todayUTC(),
+  });
+}
+
 // ── Aggregation reads, cached 60s to protect against dashboard refresh loops ──
 
 const cache = new Map(); // key → { value, expiresAt }
@@ -138,16 +150,20 @@ async function countByDay(type, day) {
 async function getSummary({ window = 'all' } = {}) {
   return cached(`summary:${window}`, async () => {
     const since = windowStart(window);
-    const [created, confirmed] = await Promise.all([
+    const [created, confirmed, rejected] = await Promise.all([
       countByType('session_created', since),
       countByType('session_confirmed', since),
+      countByType('session_rejected', since),
     ]);
     const conversionRate = created > 0 ? confirmed / created : 0;
+    const rejectionRate = created > 0 ? rejected / created : 0;
     return {
       window,
       sessionsCreated: created,
       sessionsConfirmed: confirmed,
+      sessionsRejected: rejected,
       conversionRate,
+      rejectionRate,
       generatedAt: new Date().toISOString(),
     };
   });
@@ -216,6 +232,7 @@ module.exports = {
   recordSessionCreated,
   recordAnchorMatched,
   recordSessionConfirmed,
+  recordSessionRejected,
   getSummary,
   getProviderBreakdown,
   getDailyBuckets,
