@@ -109,10 +109,11 @@ const providers = {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userinfoUrl: 'https://openidconnect.googleapis.com/v1/userinfo',
-    // Replaces the heavy `youtube.readonly` (which would let us read
-    // playlists, subscriptions, watch history) with email-only binding.
-    // Verifier should enter the user's Google/YouTube email.
-    scopes: 'openid email',
+    // `youtube.readonly` keeps the YouTube-specific consent ("See your
+    // YouTube account") so this provider is meaningfully distinct from
+    // plain Google login. `openid email` is what we actually use for
+    // identity binding — `youtube.readonly` data is not read by us.
+    scopes: 'openid email https://www.googleapis.com/auth/youtube.readonly',
     clientId: () => process.env.GOOGLE_CLIENT_ID,
     clientSecret: () => process.env.GOOGLE_CLIENT_SECRET,
   },
