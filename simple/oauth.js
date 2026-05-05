@@ -244,27 +244,24 @@ async function exchangeCodeForProfile(provider, code, extras = {}, baseUrl = nul
   const tokens = await tokenRes.json();
 
   // -- Provider-specific profile extraction --
+  let profile;
   switch (provider) {
-    case 'apple':
-      return extractAppleProfile(tokens, extras);
-    case 'github':
-      return extractGitHubProfile(tokens);
-    case 'microsoft':
-      return extractMicrosoftProfile(tokens);
-    case 'facebook':
-      return extractFacebookProfile(tokens);
-    case 'discord':
-      return extractDiscordProfile(tokens);
-    case 'tiktok':
-      return extractTikTokProfile(tokens);
-    case 'instagram':
-      return extractInstagramProfile(tokens);
-    case 'youtube':
-      return extractYouTubeProfile(tokens);
-    default:
-      // Google, LinkedIn — standard OIDC userinfo
-      return extractStandardProfile(provider, tokens);
+    case 'apple':       profile = extractAppleProfile(tokens, extras); break;
+    case 'github':      profile = await extractGitHubProfile(tokens); break;
+    case 'microsoft':   profile = await extractMicrosoftProfile(tokens); break;
+    case 'facebook':    profile = await extractFacebookProfile(tokens); break;
+    case 'discord':     profile = await extractDiscordProfile(tokens); break;
+    case 'tiktok':      profile = await extractTikTokProfile(tokens); break;
+    case 'instagram':   profile = await extractInstagramProfile(tokens); break;
+    case 'youtube':     profile = await extractYouTubeProfile(tokens); break;
+    default:            profile = await extractStandardProfile(provider, tokens);
   }
+
+  // Revoke our copy of the access token at the provider so it can't be reused.
+  // Result: true = revoked, false = revoke attempt failed, null = provider has no public revoke endpoint.
+  const tokenRevoked = await revokeToken(provider, tokens);
+
+  return { ...profile, tokenRevoked };
 }
 
 async function extractStandardProfile(provider, tokens) {
@@ -483,6 +480,128 @@ async function extractYouTubeProfile(tokens) {
 }
 
 // ──────────────────────────────────────────────
+// Token revocation — best-effort per provider
+// ──────────────────────────────────────────────
+// Returns true (revoked), false (attempt failed), or null (provider has no
+// public revoke endpoint). Never throws — revocation is best-effort and must
+// not interrupt the verification flow.
+async function revokeToken(provider, tokens) {
+  if (!tokens || !tokens.access_token) return null;
+  try {
+    switch (provider) {
+      case 'google':
+      case 'youtube':
+        return await revokeGoogleToken(tokens.access_token);
+      case 'github':
+        return await revokeGitHubToken(tokens.access_token);
+      case 'discord':
+        return await revokeDiscordToken(tokens.access_token);
+      case 'apple':
+        return await revokeAppleToken(tokens.access_token);
+      case 'facebook':
+        return await revokeFacebookToken(tokens.access_token);
+      case 'tiktok':
+        return await revokeTikTokToken(tokens.access_token);
+      // linkedin, microsoft, instagram have no public revoke endpoint —
+      // tokens expire naturally (LinkedIn 60d, Microsoft ~1h, IG long-lived).
+      default:
+        return null;
+    }
+  } catch (err) {
+    console.error(`[oauth] revokeToken failed for ${provider}:`, err.message);
+    return false;
+  }
+}
+
+async function revokeGoogleToken(accessToken) {
+  const res = await fetch('https://oauth2.googleapis.com/revoke', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ token: accessToken }).toString(),
+  });
+  return res.ok;
+}
+
+async function revokeGitHubToken(accessToken) {
+  const clientId = process.env.GITHUB_CLIENT_ID;
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return false;
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const res = await fetch(`https://api.github.com/applications/${clientId}/token`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ access_token: accessToken }),
+  });
+  return res.ok;
+}
+
+async function revokeDiscordToken(accessToken) {
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return false;
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const res = await fetch('https://discord.com/api/oauth2/token/revoke', {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({ token: accessToken, token_type_hint: 'access_token' }).toString(),
+  });
+  return res.ok;
+}
+
+async function revokeAppleToken(accessToken) {
+  const clientId = process.env.APPLE_CLIENT_ID;
+  if (!clientId) return false;
+  const clientSecret = generateAppleClientSecret();
+  const res = await fetch('https://appleid.apple.com/auth/revoke', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      token: accessToken,
+      token_type_hint: 'access_token',
+    }).toString(),
+  });
+  return res.ok;
+}
+
+async function revokeFacebookToken(accessToken) {
+  // DELETE /me/permissions revokes ALL of this app's permissions for the user —
+  // exactly the "Vero is no longer connected" behaviour we want.
+  const res = await fetch(
+    `https://graph.facebook.com/v19.0/me/permissions?access_token=${encodeURIComponent(accessToken)}`,
+    { method: 'DELETE' }
+  );
+  return res.ok;
+}
+
+async function revokeTikTokToken(accessToken) {
+  const clientKey = process.env.TIKTOK_CLIENT_KEY;
+  const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+  if (!clientKey || !clientSecret) return false;
+  const res = await fetch('https://open.tiktokapis.com/v2/oauth/revoke/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_key: clientKey,
+      client_secret: clientSecret,
+      token: accessToken,
+    }).toString(),
+  });
+  return res.ok;
+}
+
+// Providers that support token revocation (used by the UI to set expectations).
+const REVOCATION_SUPPORTED = new Set(['google', 'youtube', 'github', 'discord', 'apple', 'facebook', 'tiktok']);
+
+// ──────────────────────────────────────────────
 // State helpers
 // ──────────────────────────────────────────────
 function parseState(stateParam) {
@@ -497,6 +616,7 @@ module.exports = {
   providers,
   PROVIDER_META,
   VALID_PROVIDERS,
+  REVOCATION_SUPPORTED,
   getAuthorizationUrl,
   getCallbackUrl,
   getBaseUrlFromRequest,

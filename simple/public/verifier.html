@@ -92,7 +92,11 @@
 
         <div class="form-group">
           <label id="handle-label">Enter their Gmail address</label>
-          <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
+          <div class="handle-input-row">
+            <input id="country-code" class="country-code-select" type="text" list="country-code-options" inputmode="tel" autocomplete="off" placeholder="+1" value="+1" style="display:none;" aria-label="Country code">
+            <datalist id="country-code-options"></datalist>
+            <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
+          </div>
         </div>
 
         <button class="btn btn-primary" id="btn-add-anchor">Add Account</button>
@@ -214,7 +218,14 @@
     </div>
   </div>
 
+  <script src="country-codes.js"></script>
   <script>
+    // Populate the country-code datalist (combo box: type or pick from list)
+    const countryCodeList = document.getElementById('country-code-options');
+    if (countryCodeList && window.VERO_POPULATE_COUNTRY_DATALIST) {
+      window.VERO_POPULATE_COUNTRY_DATALIST(countryCodeList);
+    }
+
     // Provider metadata (mirrors server-side PROVIDER_META)
     const PROVIDERS = {
       google:    { label: 'Google',    type: 'oauth', handleLabel: 'Enter their Gmail address',             handlePlaceholder: 'name@gmail.com' },
@@ -228,7 +239,7 @@
       instagram: { label: 'Instagram', type: 'oauth', handleLabel: 'Enter their Instagram username',        handlePlaceholder: '@username' },
       telegram:  { label: 'Telegram',  type: 'oauth', handleLabel: 'Enter their Telegram username',         handlePlaceholder: '@username' },
       youtube:   { label: 'YouTube',   type: 'oauth', handleLabel: 'Enter their YouTube channel URL or email', handlePlaceholder: 'youtube.com/@handle or name@gmail.com' },
-      sms:       { label: 'SMS',       type: 'sms',   handleLabel: 'Enter their phone number',        handlePlaceholder: '+1 (555) 123-4567', securityLevel: 'low' },
+      sms:       { label: 'SMS',       type: 'sms',   handleLabel: 'Enter their phone number',        handlePlaceholder: '555 123 4567', securityLevel: 'low' },
       email:     { label: 'Email',     type: 'email', handleLabel: 'Enter their email address',       handlePlaceholder: 'name@example.com', securityLevel: 'low' },
     };
 
@@ -258,7 +269,13 @@
         selectedProvider = tab.dataset.provider;
         const meta = PROVIDERS[selectedProvider];
         document.getElementById('handle-label').textContent = meta.handleLabel;
-        document.getElementById('presenter-handle').placeholder = meta.handlePlaceholder;
+        const handleInput = document.getElementById('presenter-handle');
+        handleInput.placeholder = meta.handlePlaceholder;
+        handleInput.type = meta.type === 'sms' ? 'tel' : 'text';
+
+        // Country-code dropdown is only relevant for SMS
+        const ccSelect = document.getElementById('country-code');
+        if (ccSelect) ccSelect.style.display = meta.type === 'sms' ? '' : 'none';
 
         // Show/hide security warning for low-security providers
         const warning = document.getElementById('security-warning');
@@ -295,7 +312,19 @@
         alert('Please enter their identifier.');
         return;
       }
-      const handle = normalizeHandle(raw, selectedProvider);
+      let handle;
+      if (selectedProvider === 'sms') {
+        const ccSelect = document.getElementById('country-code');
+        const dial = ccSelect && ccSelect.value ? ccSelect.value : '1';
+        handle = window.VERO_TO_E164 ? window.VERO_TO_E164(raw, dial) : raw;
+        // Sanity check — E.164 must be + followed by 8–15 digits
+        if (!/^\+\d{8,15}$/.test(handle)) {
+          alert('Please enter a valid phone number for the selected country.');
+          return;
+        }
+      } else {
+        handle = normalizeHandle(raw, selectedProvider);
+      }
 
       // Check if provider already added
       if (anchors.some(a => a.provider === selectedProvider)) {
@@ -377,7 +406,11 @@
           tab.classList.add('active');
           const meta = PROVIDERS[available];
           document.getElementById('handle-label').textContent = meta.handleLabel;
-          document.getElementById('presenter-handle').placeholder = meta.handlePlaceholder;
+          const handleInput = document.getElementById('presenter-handle');
+          handleInput.placeholder = meta.handlePlaceholder;
+          handleInput.type = meta.type === 'sms' ? 'tel' : 'text';
+          const ccSelect = document.getElementById('country-code');
+          if (ccSelect) ccSelect.style.display = meta.type === 'sms' ? '' : 'none';
         }
       }
     }
@@ -631,113 +664,23 @@
 
     // ── Matched screen ──
 
-    // Profile field configuration (shared for all profile cards)
-    const PROFILE_FIELDS = [
-      { key: 'email', label: 'Email', format: (v, p) =>
-        p.email_verified ? v + ' \u2713' : v
-      },
-      { key: 'username', label: 'Username', format: v => '@' + v },
-      { key: 'company', label: 'Company' },
-      { key: 'jobTitle', label: 'Title' },
-      { key: 'department', label: 'Department' },
-      { key: 'location', label: 'Location' },
-      { key: 'bio', label: 'Bio', wrap: true },
-      { key: 'profileUrl', label: 'Profile', isLink: true },
-      { key: 'website', label: 'Website', isLink: true },
-      { key: 'twitterUsername', label: 'X / Twitter', format: v => '@' + v },
-      { key: 'accountCreated', label: 'Member since', format: v => {
-        const d = new Date(v);
-        return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
-      }},
-      { key: 'followers', label: 'Followers', format: v => v.toLocaleString() },
-      { key: 'publicRepos', label: 'Public repos', format: v => v.toLocaleString() },
-    ];
-
     function showMatchedScreen(anchorsData) {
       lastMatchedAnchors = anchorsData;
 
       const profilesContainer = document.getElementById('matched-profiles');
       profilesContainer.innerHTML = '';
 
+      // Privacy-preserving: only show that each provider verified, no profile data.
       anchorsData.forEach(anchor => {
-        const profile = anchor.profile;
-        const card = document.createElement('div');
-        card.className = 'profile-card';
-
-        // Header: picture + name + provider
-        const header = document.createElement('div');
-        header.className = 'profile-card-header';
-
-        if (profile.picture) {
-          const pic = document.createElement('img');
-          pic.className = 'profile-pic';
-          pic.referrerPolicy = 'no-referrer';
-          pic.alt = '';
-          pic.onerror = () => { pic.style.display = 'none'; };
-          pic.src = profile.picture;
-          header.appendChild(pic);
-        }
-
-        const identity = document.createElement('div');
-        identity.className = 'profile-card-identity';
-
-        const nameEl = document.createElement('div');
-        nameEl.className = 'profile-name';
-        nameEl.textContent = profile.name || 'Authenticated User';
-
-        const providerEl = document.createElement('div');
-        providerEl.className = 'profile-provider';
-        providerEl.textContent = `via ${PROVIDERS[anchor.provider].label}`;
-
-        identity.appendChild(nameEl);
-        identity.appendChild(providerEl);
-        header.appendChild(identity);
-        card.appendChild(header);
-
-        // Detail rows
-        const details = document.createElement('div');
-        details.className = 'profile-card-details';
-        let hasDetails = false;
-
-        PROFILE_FIELDS.forEach(({ key, label, format, isLink, wrap }) => {
-          const value = profile[key];
-          if (value == null || value === '') return;
-
-          hasDetails = true;
-          const row = document.createElement('div');
-          row.className = 'profile-detail-row' + (wrap ? ' wrap' : '');
-
-          const labelEl = document.createElement('span');
-          labelEl.className = 'profile-detail-label';
-          labelEl.textContent = label;
-
-          const valueEl = document.createElement('span');
-          valueEl.className = 'profile-detail-value';
-
-          const displayValue = format ? format(value, profile) : String(value);
-
-          if (isLink) {
-            const a = document.createElement('a');
-            a.href = value.startsWith('http') ? value : 'https://' + value;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.textContent = displayValue.replace(/^https?:\/\/(www\.)?/, '');
-            a.className = 'profile-detail-link';
-            valueEl.appendChild(a);
-          } else {
-            valueEl.textContent = displayValue;
-          }
-
-          row.appendChild(labelEl);
-          row.appendChild(valueEl);
-          details.appendChild(row);
-        });
-
-        if (hasDetails) {
-          card.appendChild(details);
-        }
-
-        profilesContainer.appendChild(card);
+        const row = document.createElement('div');
+        row.className = 'auth-checklist-item completed';
+        row.style.marginBottom = '8px';
+        row.innerHTML = `
+          <span class="auth-checklist-icon">&#10003;</span>
+          <span>${PROVIDERS[anchor.provider].label}</span>
+          <span style="margin-left:auto; color:var(--success-color); font-size:13px;">Verified</span>
+        `;
+        profilesContainer.appendChild(row);
       });
 
       // Words
@@ -777,16 +720,7 @@
         providerText = `their ${providerLabels.slice(0, -1).join(', ')} and ${providerLabels[providerLabels.length - 1]} identities`;
       }
 
-      const name = lastMatchedAnchors[0]?.profile?.name || 'the presenter';
-      let text = `You verified that ${name} authenticated as themselves, right now, using ${providerText}.`;
-
-      // List confirmed emails
-      const emails = lastMatchedAnchors
-        .map(a => a.profile?.email)
-        .filter(Boolean);
-      if (emails.length) {
-        text += ` Confirmed email${emails.length > 1 ? 's' : ''}: ${emails.join(', ')}`;
-      }
+      const text = `You verified that they authenticated as themselves, right now, using ${providerText}.`;
 
       document.getElementById('confirmed-text').textContent = text;
       showScreen('screen-confirmed');

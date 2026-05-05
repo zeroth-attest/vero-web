@@ -369,6 +369,35 @@ body {
   color: #555;
 }
 
+.handle-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.handle-input-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.country-code-select {
+  flex: 0 0 auto;
+  max-width: 44%;
+  padding: 12px 10px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #222;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.country-code-select:focus {
+  border-color: var(--primary-color);
+}
+
 /* Provider grid (12 providers in a 3-column grid) */
 .provider-grid {
   display: grid;
@@ -711,6 +740,54 @@ body {
 
 .callout strong {
   color: var(--primary-color);
+}
+
+/* Privacy toast — shown when presenter is asked to sign in */
+.privacy-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 12px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #ccc;
+}
+
+.privacy-toast-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #22c55e;
+  margin-top: 1px;
+}
+
+.privacy-toast-text {
+  flex: 1;
+}
+
+.privacy-toast-text strong {
+  color: #22c55e;
+}
+
+#revocation-status .privacy-toast {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+}
+
+#revocation-status .privacy-toast + .privacy-toast {
+  margin-top: 0;
+}
+
+.leave-no-trace {
+  text-align: center;
+  color: #fff;
+  font-size: 13px;
+  margin: 24px 0 8px;
 }
 
 /* Error */

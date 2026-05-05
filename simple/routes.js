@@ -123,30 +123,6 @@ router.post('/session/:id/words', (req, res) => {
   res.json({ ok: true, messaging });
 });
 
-// Shape profile for client (exclude sub, include all enriched fields)
-function shapeProfileForClient(p) {
-  if (!p) return null;
-  return {
-    name: p.name || null,
-    picture: p.picture || null,
-    provider: p.provider || null,
-    email: p.email || null,
-    email_verified: p.email_verified != null ? p.email_verified : null,
-    username: p.username || null,
-    bio: p.bio || null,
-    company: p.company || null,
-    jobTitle: p.jobTitle || null,
-    department: p.department || null,
-    location: p.location || null,
-    profileUrl: p.profileUrl || null,
-    accountCreated: p.accountCreated || null,
-    publicRepos: p.publicRepos != null ? p.publicRepos : null,
-    followers: p.followers != null ? p.followers : null,
-    website: p.website || null,
-    twitterUsername: p.twitterUsername || null,
-  };
-}
-
 // GET /api/simple/session/:id/poll — SSE endpoint for verifier to wait for presenter
 router.get('/session/:id/poll', (req, res) => {
   const session = store.getSession(req.params.id);
@@ -155,11 +131,9 @@ router.get('/session/:id/poll', (req, res) => {
   }
 
   // If already matched, return immediately
+  // Verifier only learns which providers verified — no profile data.
   if (session.state === 'MATCHED') {
-    const anchors = session.anchors.map(a => ({
-      provider: a.provider,
-      profile: shapeProfileForClient(a.profile),
-    }));
+    const anchors = session.anchors.map(a => ({ provider: a.provider }));
     return res.json({
       state: 'MATCHED',
       anchors,
@@ -173,7 +147,7 @@ router.get('/session/:id/poll', (req, res) => {
     Connection: 'keep-alive',
   });
 
-  const completedCount = session.anchors.filter(a => a.profile).length;
+  const completedCount = session.anchors.filter(a => a.matched).length;
   const totalCount = session.anchors.length;
 
   res.write(`data: ${JSON.stringify({ state: session.state, completed: completedCount, total: totalCount })}\n\n`);
@@ -193,13 +167,14 @@ router.get('/session/:id/result', (req, res) => {
     return res.status(404).json({ error: 'Session not found or expired' });
   }
 
+  // No profile data is exposed — only success/fail per anchor.
   const anchors = session.anchors.map(a => ({
     provider: a.provider,
     type: a.type,
-    completed: !!a.profile,
+    completed: a.matched,
     pinRequired: a.type !== 'oauth' && !!a.pin && !a.pinVerified,
     codeSent: a.codeSent,
-    profile: a.profile ? shapeProfileForClient(a.profile) : null,
+    tokenRevoked: a.tokenRevoked,
   }));
 
   if (session.state === 'MATCHED' || session.state === 'CONFIRMED') {
@@ -351,7 +326,7 @@ router.post('/session/lookup', (req, res) => {
   const anchors = session.anchors.map(a => ({
     provider: a.provider,
     type: a.type,
-    completed: !!a.profile,
+    completed: a.matched,
     pinRequired: a.type !== 'oauth' && !!a.pin && !a.pinVerified,
     codeSent: a.codeSent,
   }));
@@ -451,10 +426,11 @@ async function handleOAuthCallback(req, res) {
     // Use the origin from state so the redirect_uri in the token exchange
     // matches the one used when starting the OAuth flow
     const baseUrl = origin || oauth.getBaseUrlFromRequest(req);
+    // `profile` lives only in this request scope — never persisted on the session.
     const profile = await oauth.exchangeCodeForProfile(provider, code, extras, baseUrl);
 
     // Find the anchor for this provider that hasn't been authenticated yet
-    const anchor = session.anchors.find(a => a.provider === provider && !a.profile);
+    const anchor = session.anchors.find(a => a.provider === provider && !a.matched);
     if (!anchor) {
       // This provider was already authenticated — redirect back
       return res.redirect(`${redirectBase}?session=${session.id}`);
@@ -479,7 +455,12 @@ async function handleOAuthCallback(req, res) {
       stats.recordAnchorMismatch({ sessionId: session.id, provider, providerType: anchor.type });
     }
 
+    // Pass profile to matchAnchor for the verification check above only;
+    // matchAnchor discards it immediately and only flags `matched: true`.
     store.matchAnchor(session.id, provider, profile);
+    // Record whether the access token was revoked at the provider so the
+    // presenter can be shown an honest "Vero is no longer connected" message.
+    store.setTokenRevoked(session.id, provider, profile.tokenRevoked);
 
     // Redirect presenter back to origin domain
     res.redirect(`${redirectBase}?session=${session.id}`);

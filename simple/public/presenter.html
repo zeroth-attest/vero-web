@@ -84,7 +84,11 @@
 
         <div class="form-group">
           <label id="handle-label">Your Gmail address</label>
-          <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
+          <div class="handle-input-row">
+            <input id="country-code" class="country-code-select" type="text" list="country-code-options" inputmode="tel" autocomplete="off" placeholder="+1" value="+1" style="display:none;" aria-label="Country code">
+            <datalist id="country-code-options"></datalist>
+            <input type="text" id="presenter-handle" class="form-input" placeholder="name@gmail.com">
+          </div>
         </div>
 
         <button class="btn btn-primary" id="btn-find-session">Find My Session</button>
@@ -106,6 +110,17 @@
       <div class="card">
         <h2>Sign in to verify</h2>
         <p id="auth-description">A verification session is waiting for you. Sign in to prove you control this identity.</p>
+
+        <div class="privacy-toast" role="note" aria-label="Privacy notice">
+          <svg class="privacy-toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <div class="privacy-toast-text">
+            Logging in with this provider only proves that <strong>you</strong> control that account. This login cannot be used to do anything on your behalf. Vero does not store or transmit anything other than that proof.
+          </div>
+        </div>
+
         <div id="auth-checklist"></div>
         <p style="text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 12px;">By using this sign-in you are agreeing to our <a href="https://vero.technology/tos" target="_blank" style="color: var(--text-muted); text-decoration: underline;">Terms of Service</a></p>
       </div>
@@ -133,6 +148,9 @@
           <div class="spinner"></div>
           <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">Waiting for verifier to confirm...</p>
         </div>
+
+        <p class="leave-no-trace"><em>leave no trace...</em></p>
+        <div id="revocation-status"></div>
       </div>
     </div>
 
@@ -186,7 +204,14 @@
     </div>
   </div>
 
+  <script src="country-codes.js"></script>
   <script>
+    // Populate the country-code datalist (combo box: type or pick from list)
+    const countryCodeList = document.getElementById('country-code-options');
+    if (countryCodeList && window.VERO_POPULATE_COUNTRY_DATALIST) {
+      window.VERO_POPULATE_COUNTRY_DATALIST(countryCodeList);
+    }
+
     const PROVIDERS = {
       google:    { label: 'Google',    type: 'oauth', handleLabel: 'Your Gmail address',             handlePlaceholder: 'name@gmail.com' },
       linkedin:  { label: 'LinkedIn',  type: 'oauth', handleLabel: 'Your LinkedIn profile URL or email',  handlePlaceholder: 'linkedin.com/in/jane-doe or name@email.com' },
@@ -198,7 +223,7 @@
       tiktok:    { label: 'TikTok',    type: 'oauth', handleLabel: 'Your TikTok username',           handlePlaceholder: '@username' },
       instagram: { label: 'Instagram', type: 'oauth', handleLabel: 'Your Instagram username',        handlePlaceholder: '@username' },
       youtube:   { label: 'YouTube',   type: 'oauth', handleLabel: 'Your YouTube channel URL or email', handlePlaceholder: 'youtube.com/@handle or name@gmail.com' },
-      sms:       { label: 'SMS',       type: 'sms',   handleLabel: 'Your phone number',              handlePlaceholder: '+1 (555) 123-4567' },
+      sms:       { label: 'SMS',       type: 'sms',   handleLabel: 'Your phone number',              handlePlaceholder: '555 123 4567' },
       email:     { label: 'Email',     type: 'email', handleLabel: 'Your email address',             handlePlaceholder: 'name@example.com' },
     };
 
@@ -274,7 +299,12 @@
         selectedProvider = tab.dataset.provider;
         const meta = PROVIDERS[selectedProvider];
         document.getElementById('handle-label').textContent = meta.handleLabel;
-        document.getElementById('presenter-handle').placeholder = meta.handlePlaceholder;
+        const handleInput = document.getElementById('presenter-handle');
+        handleInput.placeholder = meta.handlePlaceholder;
+        handleInput.type = meta.type === 'sms' ? 'tel' : 'text';
+
+        const ccSelect = document.getElementById('country-code');
+        if (ccSelect) ccSelect.style.display = meta.type === 'sms' ? '' : 'none';
       });
     });
 
@@ -296,7 +326,18 @@
         return;
       }
 
-      const handle = normalizeHandle(raw, selectedProvider);
+      let handle;
+      if (selectedProvider === 'sms') {
+        const ccSelect = document.getElementById('country-code');
+        const dial = ccSelect && ccSelect.value ? ccSelect.value : '1';
+        handle = window.VERO_TO_E164 ? window.VERO_TO_E164(raw, dial) : raw;
+        if (!/^\+\d{8,15}$/.test(handle)) {
+          alert('Please enter a valid phone number for the selected country.');
+          return;
+        }
+      } else {
+        handle = normalizeHandle(raw, selectedProvider);
+      }
 
       try {
         const res = await fetch('/api/simple/session/lookup', {
@@ -326,6 +367,7 @@
           showScreen('screen-rejected');
         } else if ((data.state === 'MATCHED' || data.state === 'CONFIRMED') && data.words) {
           renderWords(data.words);
+          renderRevocationStatus(data.anchors);
           if (data.state === 'CONFIRMED') {
             showScreen('screen-confirmed');
           } else {
@@ -341,6 +383,34 @@
       } catch (err) {
         showError(err.message);
       }
+    }
+
+    // Render the post-auth privacy summary: per OAuth provider, show whether
+    // Vero's access token was revoked at the provider, or (for providers
+    // without a public revoke endpoint) confirm that no token was retained.
+    function renderRevocationStatus(anchors) {
+      const container = document.getElementById('revocation-status');
+      if (!container) return;
+      container.innerHTML = '';
+      const oauthAnchors = (anchors || []).filter(a => a.type === 'oauth' && a.completed);
+      if (oauthAnchors.length === 0) return;
+
+      oauthAnchors.forEach(anchor => {
+        const label = (PROVIDERS[anchor.provider] && PROVIDERS[anchor.provider].label) || anchor.provider;
+        const toast = document.createElement('div');
+        toast.className = 'privacy-toast';
+        toast.setAttribute('role', 'note');
+        const text = anchor.tokenRevoked === true
+          ? `<strong>Token revoked</strong> &mdash; Vero is no longer connected to your ${label} account.`
+          : `<strong>No token retained</strong> &mdash; Vero held it only long enough to verify your ${label} identity.`;
+        toast.innerHTML = `
+          <svg class="privacy-toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div class="privacy-toast-text">${text}</div>
+        `;
+        container.appendChild(toast);
+      });
     }
 
     // Render auth checklist (supports single and multi-anchor)

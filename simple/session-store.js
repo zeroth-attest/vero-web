@@ -38,8 +38,9 @@ function createSession({ anchors, source }) {
         provider: a.provider,
         handle: a.handle.toLowerCase().trim(),
         type,
-        profile: null,
-        pin: null,         // 6-digit PIN for SMS/email in multi-anchor sessions
+        matched: false,     // becomes true once auth proof is received; profile is discarded
+        tokenRevoked: null, // true=revoked at provider, false=attempt failed, null=not applicable
+        pin: null,          // 6-digit PIN for SMS/email in multi-anchor sessions
         pinVerified: false, // whether the PIN has been verified
         codeSent: false,    // whether verification code/words have been sent
       };
@@ -80,16 +81,18 @@ function setSelectedWords(id, words) {
   return session;
 }
 
+// `profile` is used only to verify the identity match against the expected handle
+// in the calling code; we deliberately do NOT persist it on the session.
 function matchAnchor(id, provider, profile) {
   const session = getSession(id);
   if (!session) return null;
 
   // Find the unmatched anchor for this provider
-  const anchor = session.anchors.find(a => a.provider === provider && !a.profile);
+  const anchor = session.anchors.find(a => a.provider === provider && !a.matched);
   if (!anchor) return null;
 
-  anchor.profile = profile;
-  const completedCount = session.anchors.filter(a => a.profile !== null).length;
+  anchor.matched = true;
+  const completedCount = session.anchors.filter(a => a.matched).length;
   stats.recordAnchorMatched({
     sessionId: id,
     provider,
@@ -103,11 +106,9 @@ function matchAnchor(id, provider, profile) {
 
   if (allMatched) {
     session.state = 'MATCHED';
-    // Build anchor data for SSE (exclude sub from each profile for privacy)
-    const anchorData = session.anchors.map(a => {
-      const { sub, ...clientProfile } = a.profile;
-      return { provider: a.provider, profile: clientProfile };
-    });
+    // Verifier only learns: which providers, and that they each verified.
+    // No profile data (name, email, picture, bio, etc.) is sent.
+    const anchorData = session.anchors.map(a => ({ provider: a.provider }));
     for (const listener of session.pollListeners) {
       try {
         listener.write(`data: ${JSON.stringify({ state: 'MATCHED', anchors: anchorData })}\n\n`);
@@ -117,8 +118,6 @@ function matchAnchor(id, provider, profile) {
     session.pollListeners = [];
   } else {
     session.state = 'PARTIAL';
-    // Send progress update (keep SSE connection open)
-    const { sub, ...lastProfile } = profile;
     for (const listener of session.pollListeners) {
       try {
         listener.write(`data: ${JSON.stringify({
@@ -126,7 +125,6 @@ function matchAnchor(id, provider, profile) {
           completed: completedCount,
           total: totalCount,
           lastProvider: provider,
-          lastProfile,
         })}\n\n`);
       } catch (e) { /* client may have disconnected */ }
     }
@@ -228,17 +226,8 @@ function verifyPin(id, provider, pin) {
 
   anchor.pinVerified = true;
 
-  // Build a synthetic profile for the SMS/email anchor
-  const profile = {
-    sub: anchor.handle,
-    name: anchor.handle,
-    email: anchor.type === 'email' ? anchor.handle : null,
-    phone: anchor.type === 'sms' ? anchor.handle : null,
-    picture: null,
-    provider: anchor.provider,
-  };
-
-  return { session: matchAnchor(id, provider, profile) };
+  // No profile is persisted — pass a minimal proof object to matchAnchor
+  return { session: matchAnchor(id, provider, { provider }) };
 }
 
 // Mark that a verification code has been sent for an anchor
@@ -256,6 +245,15 @@ function setAnchorPin(id, provider, pin) {
   if (!session) return null;
   const anchor = session.anchors.find(a => a.provider === provider);
   if (anchor) anchor.pin = pin;
+  return session;
+}
+
+// Record whether the OAuth access token was revoked at the provider
+function setTokenRevoked(id, provider, revoked) {
+  const session = getSession(id);
+  if (!session) return null;
+  const anchor = session.anchors.find(a => a.provider === provider);
+  if (anchor) anchor.tokenRevoked = revoked;
   return session;
 }
 
@@ -282,5 +280,6 @@ module.exports = {
   verifyPin,
   markCodeSent,
   setAnchorPin,
+  setTokenRevoked,
   isSoleMessagingSession,
 };
