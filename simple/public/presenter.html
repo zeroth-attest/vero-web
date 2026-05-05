@@ -271,6 +271,18 @@
         showError('This session has expired. Ask the verifier to start a new one.');
       } else if (error === 'auth_failed') {
         showError('Authentication failed. Please try again.');
+      } else if (error === 'identity_mismatch') {
+        // Wrong account used — let the presenter retry with the right one.
+        const providerParam = params.get('provider');
+        const providerLabel = providerParam && PROVIDERS[providerParam]
+          ? PROVIDERS[providerParam].label
+          : 'that provider';
+        if (sessionParam) {
+          currentSessionId = sessionParam;
+          showMismatchError(sessionParam, providerLabel);
+        } else {
+          showError(`The ${providerLabel} account you signed in with doesn't match the one being verified.`);
+        }
       } else if (error === 'already_authenticated') {
         // Provider was already done; reload result to show next steps
         if (sessionParam) {
@@ -285,6 +297,27 @@
     } else if (sessionParam) {
       currentSessionId = sessionParam;
       loadResult(sessionParam);
+    }
+
+    // Render an inline retry screen for an identity-mismatch error: explain
+    // what happened, then re-render the auth checklist so they can try again.
+    async function showMismatchError(sid, providerLabel) {
+      try {
+        const res = await fetch(`/api/simple/session/${sid}/result`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Session not found');
+
+        renderAuthChecklist(sid, data.anchors);
+        // Override the description set by renderAuthChecklist with the
+        // mismatch-specific message.
+        const desc = document.getElementById('auth-description');
+        if (desc) {
+          desc.innerHTML = `<strong style="color: var(--error-color, #ef4444);">Wrong ${providerLabel} account.</strong> The account you signed in with doesn&rsquo;t match the one the verifier requested. Sign out of ${providerLabel} (in another tab) and try again with the correct account.`;
+        }
+        showScreen('screen-auth');
+      } catch (err) {
+        showError(err.message);
+      }
     }
 
     // Provider tabs

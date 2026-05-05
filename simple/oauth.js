@@ -29,7 +29,9 @@ const providers = {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userinfoUrl: 'https://openidconnect.googleapis.com/v1/userinfo',
-    scopes: 'openid profile email',
+    // Drops `profile` (name/photo) — keeps `email` so we can bind to the
+    // verifier-supplied handle. Token is revoked at the provider after use.
+    scopes: 'openid email',
     clientId: () => process.env.GOOGLE_CLIENT_ID,
     clientSecret: () => process.env.GOOGLE_CLIENT_SECRET,
   },
@@ -37,7 +39,10 @@ const providers = {
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
     userinfoUrl: 'https://api.linkedin.com/v2/userinfo',
-    scopes: 'openid profile email',
+    // Drops `profile` (name/photo) — keeps `email` so we can bind to the
+    // verifier-supplied handle. LinkedIn has no public revoke endpoint, so
+    // the token will expire naturally (~60d).
+    scopes: 'openid email',
     clientId: () => process.env.LINKEDIN_CLIENT_ID,
     clientSecret: () => process.env.LINKEDIN_CLIENT_SECRET,
   },
@@ -53,23 +58,27 @@ const providers = {
   microsoft: {
     authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    userinfoUrl: 'https://graph.microsoft.com/v1.0/me',
-    scopes: 'openid profile email User.Read',
+    // No userinfoUrl — we decode the id_token instead of calling Graph /me,
+    // which would require User.Read (a much broader permission).
+    // Drops `profile` (name/photo) and `User.Read`. Keeps `email` for binding.
+    scopes: 'openid email',
     clientId: () => process.env.MICROSOFT_CLIENT_ID,
     clientSecret: () => process.env.MICROSOFT_CLIENT_SECRET,
   },
   facebook: {
     authUrl: 'https://www.facebook.com/v19.0/dialog/oauth',
     tokenUrl: 'https://graph.facebook.com/v19.0/oauth/access_token',
-    userinfoUrl: 'https://graph.facebook.com/v19.0/me?fields=id,name,email,picture.width(200).height(200)',
-    scopes: 'public_profile email',
+    userinfoUrl: 'https://graph.facebook.com/v19.0/me?fields=id,email',
+    // public_profile is auto-granted; we only request `email` for binding.
+    scopes: 'email',
     clientId: () => process.env.FACEBOOK_CLIENT_ID,
     clientSecret: () => process.env.FACEBOOK_CLIENT_SECRET,
   },
   apple: {
     authUrl: 'https://appleid.apple.com/auth/authorize',
     tokenUrl: 'https://appleid.apple.com/auth/token',
-    scopes: 'name email',
+    // Drops `name` — keeps `email` for binding.
+    scopes: 'email',
     clientId: () => process.env.APPLE_CLIENT_ID,
     // Apple uses a JWT client secret — generated on the fly
     clientSecret: () => generateAppleClientSecret(),
@@ -99,7 +108,11 @@ const providers = {
   youtube: {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
-    scopes: 'https://www.googleapis.com/auth/youtube.readonly',
+    userinfoUrl: 'https://openidconnect.googleapis.com/v1/userinfo',
+    // Replaces the heavy `youtube.readonly` (which would let us read
+    // playlists, subscriptions, watch history) with email-only binding.
+    // Verifier should enter the user's Google/YouTube email.
+    scopes: 'openid email',
     clientId: () => process.env.GOOGLE_CLIENT_ID,
     clientSecret: () => process.env.GOOGLE_CLIENT_SECRET,
   },
@@ -332,77 +345,46 @@ async function extractGitHubProfile(tokens) {
 }
 
 async function extractMicrosoftProfile(tokens) {
-  const profileRes = await fetch('https://graph.microsoft.com/v1.0/me', {
-    headers: { Authorization: `Bearer ${tokens.access_token}` },
-  });
-  if (!profileRes.ok) throw new Error('Failed to fetch Microsoft profile');
-  const profile = await profileRes.json();
-
-  // Try to get profile photo (may 404)
-  let picture = null;
-  try {
-    const photoRes = await fetch('https://graph.microsoft.com/v1.0/me/photo/$value', {
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
-    });
-    if (photoRes.ok) {
-      const blob = await photoRes.arrayBuffer();
-      const base64 = Buffer.from(blob).toString('base64');
-      const contentType = photoRes.headers.get('content-type') || 'image/jpeg';
-      picture = `data:${contentType};base64,${base64}`;
-    }
-  } catch { /* no photo available */ }
-
+  // Microsoft v2.0 issues an id_token (JWT) under the `openid` scope; with
+  // `email` we get the email/preferred_username claim. Decoding the JWT
+  // avoids needing the User.Read Graph permission entirely.
+  const decoded = tokens.id_token ? jwt.decode(tokens.id_token) : null;
+  if (!decoded) throw new Error('Failed to decode Microsoft id_token');
   return {
-    sub: profile.id,
-    name: profile.displayName,
-    email: profile.mail || profile.userPrincipalName,
-    picture,
-    email_verified: true, // implicit for OAuth-authenticated Microsoft accounts
-    jobTitle: profile.jobTitle || null,
-    department: profile.department || null,
-    location: profile.officeLocation || null,
+    sub: decoded.sub || decoded.oid,
+    name: null,
+    email: decoded.email || decoded.preferred_username || null,
+    picture: null,
+    email_verified: true, // Microsoft accounts have provider-verified emails
     provider: 'microsoft',
   };
 }
 
 async function extractFacebookProfile(tokens) {
   const profileRes = await fetch(
-    `https://graph.facebook.com/v19.0/me?fields=id,name,email,picture.width(200).height(200),link&access_token=${tokens.access_token}`
+    `https://graph.facebook.com/v19.0/me?fields=id,email&access_token=${encodeURIComponent(tokens.access_token)}`
   );
   if (!profileRes.ok) throw new Error('Failed to fetch Facebook profile');
   const profile = await profileRes.json();
-
   return {
     sub: profile.id,
-    name: profile.name,
-    email: profile.email,
-    picture: profile.picture && profile.picture.data ? profile.picture.data.url : null,
-    profileUrl: profile.link || null,
+    name: null,
+    email: profile.email || null,
+    picture: null,
     provider: 'facebook',
   };
 }
 
-function extractAppleProfile(tokens, extras) {
-  // Apple sends identity in the id_token (JWT) — decode it
+function extractAppleProfile(tokens /* extras unused — name scope dropped */) {
+  // Apple sends identity in the id_token (JWT) — decode it.
+  // With only `email` scope, we receive sub + email; no name claim.
   const decoded = jwt.decode(tokens.id_token);
   if (!decoded) throw new Error('Failed to decode Apple ID token');
-
-  // Name comes from the `user` POST parameter on first auth only
-  let name = null;
-  if (extras.user) {
-    try {
-      const userData = typeof extras.user === 'string' ? JSON.parse(extras.user) : extras.user;
-      if (userData.name) {
-        name = [userData.name.firstName, userData.name.lastName].filter(Boolean).join(' ');
-      }
-    } catch { /* user data not available */ }
-  }
-
   return {
     sub: decoded.sub,
-    name: name || 'Apple User',
-    email: decoded.email,
-    picture: null, // Apple never provides a profile photo
+    name: null,
+    email: decoded.email || null,
+    picture: null,
     email_verified: decoded.email_verified || null,
     provider: 'apple',
   };
@@ -462,19 +444,20 @@ async function extractInstagramProfile(tokens) {
 }
 
 async function extractYouTubeProfile(tokens) {
-  const profileRes = await fetch(
-    'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
-    { headers: { Authorization: `Bearer ${tokens.access_token}` } }
-  );
-  if (!profileRes.ok) throw new Error('Failed to fetch YouTube profile');
-  const data = await profileRes.json();
-  const channel = data.items && data.items[0] ? data.items[0].snippet : {};
+  // With scopes minimized to `openid email`, fall back to Google's userinfo
+  // endpoint instead of YouTube's channel API (which would require the
+  // youtube.readonly scope).
+  const profileRes = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  if (!profileRes.ok) throw new Error('Failed to fetch YouTube/Google profile');
+  const profile = await profileRes.json();
   return {
-    sub: data.items && data.items[0] ? data.items[0].id : null,
-    name: channel.title || 'YouTube User',
-    email: null,
-    picture: channel.thumbnails && channel.thumbnails.default ? channel.thumbnails.default.url : null,
-    profileUrl: data.items && data.items[0] ? `https://youtube.com/channel/${data.items[0].id}` : null,
+    sub: profile.sub,
+    name: null,
+    email: profile.email || null,
+    picture: null,
+    email_verified: profile.email_verified || null,
     provider: 'youtube',
   };
 }

@@ -436,7 +436,9 @@ async function handleOAuthCallback(req, res) {
       return res.redirect(`${redirectBase}?session=${session.id}`);
     }
 
-    // Identity verification: check if authenticated profile matches expected handle
+    // Identity verification: bind the OAuth profile to the verifier-supplied
+    // handle. If they don't match, REJECT — the presenter signed in to the
+    // wrong account. Token has already been revoked inside exchangeCodeForProfile.
     let matched = false;
     const handle = anchor.handle;
 
@@ -449,10 +451,11 @@ async function handleOAuthCallback(req, res) {
     }
 
     if (!matched) {
-      // Still allow the match for demo purposes — the identity was authenticated,
-      // just not the expected one. In production you'd reject this.
-      console.log(`Identity mismatch: expected ${anchor.handle}, got ${profile.email || profile.username || profile.sub}`);
+      console.log(`Identity mismatch on ${provider}: expected ${anchor.handle}, got ${profile.email || profile.username || profile.sub}`);
       stats.recordAnchorMismatch({ sessionId: session.id, provider, providerType: anchor.type });
+      // Do NOT mark the anchor matched — bounce the presenter back with an
+      // explicit error so they can sign out and retry with the right account.
+      return res.redirect(`${redirectBase}?session=${session.id}&error=identity_mismatch&provider=${provider}`);
     }
 
     // Pass profile to matchAnchor for the verification check above only;
