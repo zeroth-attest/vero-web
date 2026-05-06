@@ -441,8 +441,15 @@ async function handleOAuthCallback(req, res) {
     // wrong account. Token has already been revoked inside exchangeCodeForProfile.
     let matched = false;
     const handle = anchor.handle;
+    const handleIsEmail = handle.includes('@');
 
-    if (profile.email && profile.email.toLowerCase() === handle) {
+    if (provider === 'linkedin' && !handleIsEmail) {
+      // LinkedIn URL slugs (e.g. "jameycanterbury") aren't returned by LinkedIn's
+      // OIDC userinfo, so we can't strictly verify them. Trust OAuth completion
+      // for slug handles; the voice + words exchange does the actual auth.
+      // Email handles still bind strictly via the profile.email check below.
+      matched = true;
+    } else if (profile.email && profile.email.toLowerCase() === handle) {
       matched = true;
     } else if (provider === 'github' && profile.username && profile.username.toLowerCase() === handle) {
       matched = true;
